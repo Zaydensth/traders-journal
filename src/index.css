@@ -55,6 +55,36 @@
   --header-height: 72px;
 }
 
+/* =================== DARK THEME =================== */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-sidebar: #1e293b;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --bg-input: #334155;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --border: #334155;
+  --border-light: #1e293b;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+
+  --green-50: #052e16;
+  --green-100: #064e3b;
+  --red-50: #450a0a;
+  --red-100: #7f1d1d;
+  --blue-50: #172554;
+  --blue-100: #1e3a8a;
+  --purple-50: #2e1065;
+  --orange-50: #431407;
+  --teal-50: #042f2e;
+}
+
 /* =================== RESET =================== */
 *, *::before, *::after {
   margin: 0;
@@ -1812,6 +1842,21 @@ input, select, textarea { font-family: inherit; outline: none; }
   font-weight: 600;
   color: var(--green-600);
   margin-top: 8px;
+}
+
+.sidebar-pro-tip {
+  margin: 12px;
+  margin-top: 40px;
+  padding: 16px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.sidebar-pro-tip p {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 8px 0 0;
 }
 
 /* =================== DONUT PREVIEW =================== */

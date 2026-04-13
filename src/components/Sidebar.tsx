@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
@@ -8,6 +8,7 @@ import { storage } from '../utils/storage';
 import { getDisciplineScore } from '../utils/calculations';
 
 export default function Sidebar() {
+  const location = useLocation();
   const [score, setScore] = useState(100);
 
   useEffect(() => {
@@ -61,28 +62,35 @@ export default function Sidebar() {
         </NavLink>
       </nav>
 
-      {/* Discipline Score Widget — below Settings */}
-      <div className="sidebar-discipline">
-        <div className="sidebar-widget-title">Discipline Score</div>
-        <div className="discipline-circle">
-          <svg viewBox="0 0 100 100">
-            <circle className="bg" cx="50" cy="50" r="38" />
-            <circle
-              className="progress"
-              cx="50" cy="50" r="38"
-              strokeDasharray={circumference}
-              strokeDashoffset={offset}
-            />
-          </svg>
-          <div className="discipline-value">
-            <div className="number">{score}</div>
-            <div className="total">/ 100</div>
+      {/* Bottom Widget — Pro Tip on Add Trade, Discipline Score elsewhere */}
+      {location.pathname === '/add-trade' ? (
+        <div className="sidebar-pro-tip">
+          <div className="sidebar-widget-title">💡 Pro Tip</div>
+          <p>Always define your stop loss before entering a trade. Risk only 1–2% of capital per trade.</p>
+        </div>
+      ) : (
+        <div className="sidebar-discipline">
+          <div className="sidebar-widget-title">Discipline Score</div>
+          <div className="discipline-circle">
+            <svg viewBox="0 0 100 100">
+              <circle className="bg" cx="50" cy="50" r="38" />
+              <circle
+                className="progress"
+                cx="50" cy="50" r="38"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+              />
+            </svg>
+            <div className="discipline-value">
+              <div className="number">{score}</div>
+              <div className="total">/ 100</div>
+            </div>
+          </div>
+          <div className="discipline-weekly">
+            ▲ +7 pts this week
           </div>
         </div>
-        <div className="discipline-weekly">
-          ▲ +7 pts this week
-        </div>
-      </div>
+      )}
     </aside>
   );
 }

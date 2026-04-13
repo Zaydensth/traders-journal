@@ -4,12 +4,13 @@ import {
   TrendingUp, TrendingDown,
   Calendar, Clock, Tag, Search,
   ChevronDown, X, CheckCircle2, Upload, Image,
-  Bell, Sun, Zap
+  Bell, Sun, Moon, Zap
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
 import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils/calculations';
+import { toggleTheme, getTheme } from '../utils/theme';
 
 const EMOTION_OPTIONS = [
   { label: 'Neutral', emoji: '😐' },
@@ -58,6 +59,7 @@ export default function AddTrade() {
   const [screenshotName, setScreenshotName] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tagsList, setTagsList] = useState<string[]>([]);
+  const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const previewTrade = useMemo((): Trade => ({
@@ -217,14 +219,20 @@ export default function AddTrade() {
             {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             <ChevronDown size={13} />
           </button>
-          <button className="header-btn"><Sun size={15} /></button>
-          <button className="header-btn"><Bell size={15} /></button>
+          <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="header-btn"><Bell size={15} /></button>
+            <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />
+          </div>
           <div className="user-profile-badge">
             <div className="user-avatar">RT</div>
             <div className="user-profile-info">
               <span className="user-profile-name">Rahul Trader</span>
               <span className="user-profile-plan">Pro Plan</span>
             </div>
+            <ChevronDown size={14} color="var(--text-secondary)" />
           </div>
         </div>
       </div>
