@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
-  DollarSign, Target, Scale, BarChart3, TrendingDown, TrendingUp,
+  Target, Scale, BarChart3, TrendingDown, Activity,
   Calendar, Bell, ChevronDown, Clock,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw
@@ -152,7 +152,12 @@ export default function Dashboard() {
         <div className="page-header-right">
           <button className="header-btn">
             <Calendar size={15} />
-            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {(() => {
+              const today = new Date();
+              const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+              const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              return `${fmt(monthStart)} → ${fmt(today)}, ${today.getFullYear()}`;
+            })()}
           </button>
           <button className="header-btn"><Bell size={15} /></button>
           <div className="user-profile-badge">
@@ -169,7 +174,15 @@ export default function Dashboard() {
         {/* ===== STAT CARDS ===== */}
         <div className="stat-cards">
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green"><DollarSign size={20} /></div>
+            <div className="stat-card-icon green">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 2h4l-1 3H11L10 2z" />
+                <path d="M12 5C7.6 5 4 8.4 4 13c0 3.9 3.6 6 8 6s8-2.1 8-6c0-4.6-3.6-8-8-8z" />
+                <path d="M12 10v4M10 12h4" />
+              </svg>
+            </div>
             <div className="stat-card-label">Net P&L</div>
             <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.netPnL)}
@@ -214,11 +227,13 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon teal"><TrendingUp size={20} /></div>
+            <div className="stat-card-icon teal"><Activity size={20} /></div>
             <div className="stat-card-label">Trades This Week</div>
             <div className="stat-card-value">{stats.tradesThisWeek}</div>
             <div className="stat-card-change">
-              {stats.wins} Winners · {stats.losses} Losers
+              <span style={{ color: 'var(--green-600)', fontWeight: 600 }}>{stats.wins} W</span>
+              {' · '}
+              <span style={{ color: 'var(--red-500)', fontWeight: 600 }}>{stats.losses} L</span>
             </div>
           </div>
         </div>

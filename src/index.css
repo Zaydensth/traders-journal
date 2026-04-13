@@ -142,7 +142,6 @@ input, select, textarea { font-family: inherit; outline: none; }
   flex-direction: column;
   gap: 2px;
   padding: 0 12px;
-  flex: 1;
 }
 
 .sidebar-link {
@@ -306,7 +305,7 @@ input, select, textarea { font-family: inherit; outline: none; }
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .stat-card {
@@ -1708,6 +1707,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 /* =================== SIDEBAR DISCIPLINE WIDGET =================== */
 .sidebar-discipline {
   margin: 12px;
+  margin-top: 24px;
   padding: 16px;
   background: var(--bg-primary);
   border-radius: var(--radius-md);
