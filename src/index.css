@@ -796,6 +796,99 @@ input, select, textarea { font-family: inherit; outline: none; }
   }
 }
 
+/* =================== ADD TRADE NEW ELEMENTS =================== */
+
+/* Input with icon (search) */
+.input-with-icon { position: relative; }
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Input with ₹ prefix */
+.input-with-prefix { position: relative; display: flex; align-items: center; }
+.input-prefix {
+  position: absolute;
+  left: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.input-with-prefix input { padding-left: 24px; width: 100%; }
+
+/* Date + Time inline row */
+.date-time-row { display: flex; gap: 8px; }
+.date-time-row input { flex: 1; min-width: 0; }
+
+/* Section number — green circle */
+.section-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--green-500);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Tag pills */
+.tags-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-100);
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.tag-pill button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--green-600);
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+.tag-pill button:hover { color: var(--red-500); }
+
+/* Quick Templates */
+.quick-templates-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick-template-btn {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quick-template-btn:hover {
+  border-color: var(--green-500);
+  color: var(--green-600);
+  background: var(--green-50);
+}
+
 /* =================== ANIMATIONS =================== */
 @keyframes fadeInUp {
   from {
