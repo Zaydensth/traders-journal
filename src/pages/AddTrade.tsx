@@ -1,14 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Save, Eye, TrendingUp, TrendingDown, DollarSign,
-  Scale, AlertTriangle, Calendar, Clock, FileText, Tag,
-  ChevronDown, X, CheckCircle2, Zap
+  TrendingUp, TrendingDown,
+  Calendar, Clock, FileText, Tag,
+  ChevronDown, X, CheckCircle2, Upload, Image
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
-import { SETUPS, EMOTIONS, MISTAKES, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
+import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils/calculations';
+
+const EMOTION_OPTIONS = [
+  { label: 'Neutral', emoji: '😐' },
+  { label: 'Fear', emoji: '😨' },
+  { label: 'Greed', emoji: '🤑' },
+  { label: 'Confidence', emoji: '😎' },
+  { label: 'FOMO', emoji: '😰' },
+];
 
 type FormData = Omit<Trade, 'id' | 'result' | 'tags'> & { tags: string };
 
@@ -39,6 +47,9 @@ export default function AddTrade() {
   const [submitted, setSubmitted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasMistake, setHasMistake] = useState(false);
+  const [screenshotName, setScreenshotName] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Live preview calculations
   const previewTrade = useMemo((): Trade => ({
@@ -84,11 +95,7 @@ export default function AddTrade() {
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]) {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
+      setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
     }
   }
 
@@ -103,10 +110,11 @@ export default function AddTrade() {
     return Object.keys(errs).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitted(true);
-    if (!validate()) return;
+  function saveTrade(isDraft = false) {
+    if (!isDraft) {
+      setSubmitted(true);
+      if (!validate()) return;
+    }
 
     const trade: Trade = {
       ...form,
@@ -119,17 +127,40 @@ export default function AddTrade() {
     trades.push(trade);
     storage.saveTrades(trades);
 
-    setShowSuccess(true);
-    setTimeout(() => {
-      navigate('/');
-    }, 1500);
+    if (!isDraft) {
+      setShowSuccess(true);
+      setTimeout(() => navigate('/'), 1500);
+    } else {
+      alert('Trade saved as draft!');
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    saveTrade(false);
   }
 
   function handleReset() {
     setForm({ ...defaultForm });
     setSubmitted(false);
     setErrors({});
+    setHasMistake(false);
+    setScreenshotName('');
   }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setScreenshotName(file.name);
+      // In a real app, upload to server. For now, store name.
+      updateField('screenshot', file.name);
+    }
+  }
+
+  // Donut chart for preview
+  const donutCircumference = 2 * Math.PI * 54;
+  const donutPercent = liveRR > 0 ? Math.min(liveRR / 5, 1) : 0;
+  const donutOffset = donutCircumference - donutPercent * donutCircumference;
 
   // Success overlay
   if (showSuccess) {
@@ -140,9 +171,7 @@ export default function AddTrade() {
             <CheckCircle2 size={48} color="var(--green-600)" />
           </div>
           <h2>Trade Saved!</h2>
-          <p>
-            {livePnL >= 0 ? '🎉 Profitable trade logged.' : '📉 Loss recorded — learn and improve!'}
-          </p>
+          <p>{livePnL >= 0 ? '🎉 Profitable trade logged.' : '📉 Loss recorded — learn and improve!'}</p>
           <div className="success-stats">
             <div className={`success-stat ${livePnL >= 0 ? 'positive' : 'negative'}`}>
               <span>P&L</span>
@@ -186,12 +215,7 @@ export default function AddTrade() {
             <div className="form-grid-3">
               <div className={`form-group ${errors.instrument ? 'has-error' : ''}`}>
                 <label>Instrument *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. NIFTY 50, RELIANCE"
-                  value={form.instrument}
-                  onChange={e => updateField('instrument', e.target.value)}
-                />
+                <input type="text" placeholder="e.g. NIFTY 50, RELIANCE" value={form.instrument} onChange={e => updateField('instrument', e.target.value)} />
                 {errors.instrument && <span className="form-error">{errors.instrument}</span>}
               </div>
               <div className="form-group">
@@ -239,259 +263,230 @@ export default function AddTrade() {
           {/* Section 2: Direction & Prices */}
           <div className="card form-section animate-in">
             <div className="form-section-header">
-              <DollarSign size={18} color="var(--green-600)" />
+              <span style={{ color: 'var(--green-600)' }}>₹</span>
               <h3>Price & Position</h3>
             </div>
-
-            {/* Direction Toggle */}
             <div className="direction-toggle">
-              <button
-                type="button"
-                className={`direction-btn long ${form.direction === 'Long' ? 'active' : ''}`}
-                onClick={() => updateField('direction', 'Long')}
-              >
+              <button type="button" className={`direction-btn long ${form.direction === 'Long' ? 'active' : ''}`} onClick={() => updateField('direction', 'Long')}>
                 <TrendingUp size={16} /> Long
               </button>
-              <button
-                type="button"
-                className={`direction-btn short ${form.direction === 'Short' ? 'active' : ''}`}
-                onClick={() => updateField('direction', 'Short')}
-              >
+              <button type="button" className={`direction-btn short ${form.direction === 'Short' ? 'active' : ''}`} onClick={() => updateField('direction', 'Short')}>
                 <TrendingDown size={16} /> Short
               </button>
             </div>
-
             <div className="form-grid-2">
               <div className={`form-group ${errors.entryPrice ? 'has-error' : ''}`}>
                 <label>Entry Price *</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={form.entryPrice || ''}
-                  onChange={e => updateField('entryPrice', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0.00" value={form.entryPrice || ''} onChange={e => updateField('entryPrice', parseFloat(e.target.value) || 0)} />
                 {errors.entryPrice && <span className="form-error">{errors.entryPrice}</span>}
               </div>
               <div className={`form-group ${errors.exitPrice ? 'has-error' : ''}`}>
                 <label>Exit Price *</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={form.exitPrice || ''}
-                  onChange={e => updateField('exitPrice', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0.00" value={form.exitPrice || ''} onChange={e => updateField('exitPrice', parseFloat(e.target.value) || 0)} />
                 {errors.exitPrice && <span className="form-error">{errors.exitPrice}</span>}
               </div>
             </div>
             <div className="form-grid-3">
               <div className="form-group">
                 <label>Stop Loss</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={form.stopLoss || ''}
-                  onChange={e => updateField('stopLoss', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0.00" value={form.stopLoss || ''} onChange={e => updateField('stopLoss', parseFloat(e.target.value) || 0)} />
               </div>
               <div className="form-group">
                 <label>Target Price</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={form.targetPrice || ''}
-                  onChange={e => updateField('targetPrice', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0.00" value={form.targetPrice || ''} onChange={e => updateField('targetPrice', parseFloat(e.target.value) || 0)} />
               </div>
               <div className={`form-group ${errors.quantity ? 'has-error' : ''}`}>
                 <label>Quantity *</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0"
-                  value={form.quantity || ''}
-                  onChange={e => updateField('quantity', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0" value={form.quantity || ''} onChange={e => updateField('quantity', parseFloat(e.target.value) || 0)} />
                 {errors.quantity && <span className="form-error">{errors.quantity}</span>}
               </div>
             </div>
             <div className="form-grid-2">
               <div className="form-group">
                 <label>Fees / Commission</label>
-                <input
-                  type="number"
-                  step="any"
-                  placeholder="0.00"
-                  value={form.fees || ''}
-                  onChange={e => updateField('fees', parseFloat(e.target.value) || 0)}
-                />
+                <input type="number" step="any" placeholder="0.00" value={form.fees || ''} onChange={e => updateField('fees', parseFloat(e.target.value) || 0)} />
               </div>
               <div className="form-group">
                 <label><Tag size={13} /> Tags (comma-separated)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. earnings, breakout, scalp"
-                  value={form.tags}
-                  onChange={e => updateField('tags', e.target.value)}
-                />
+                <input type="text" placeholder="e.g. earnings, breakout, scalp" value={form.tags} onChange={e => updateField('tags', e.target.value)} />
               </div>
             </div>
           </div>
 
-          {/* Section 3: Psychology */}
+          {/* Section 3: Notes & Psychology */}
           <div className="card form-section animate-in">
             <div className="form-section-header">
-              <AlertTriangle size={18} color="var(--orange-500)" />
-              <h3>Psychology & Review</h3>
+              <span className="section-number">4</span>
+              <h3>Notes & Psychology</h3>
             </div>
-            <div className="form-grid-2">
-              <div className="form-group">
-                <label>Emotion</label>
-                <div className="select-wrapper">
-                  <select value={form.emotion} onChange={e => updateField('emotion', e.target.value)}>
-                    {EMOTIONS.map(em => <option key={em} value={em}>{em}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="select-icon" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Mistake</label>
-                <div className="select-wrapper">
-                  <select value={form.mistake} onChange={e => updateField('mistake', e.target.value)}>
-                    <option value="">None</option>
-                    {MISTAKES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="select-icon" />
-                </div>
-              </div>
-            </div>
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 20 }}>
               <label>Trade Notes</label>
               <textarea
-                placeholder="What was your thesis? What did you observe? What would you do differently?"
-                rows={4}
+                placeholder="Clean EMA crossover above VWAP with good volume.&#10;Price respected 15m trend. Exited at target as planned."
+                rows={3}
                 value={form.notes}
                 onChange={e => updateField('notes', e.target.value)}
               />
             </div>
+
+            {/* Emotion Pills */}
+            <div className="form-group" style={{ marginBottom: 20 }}>
+              <label>Emotions Felt</label>
+              <div className="emotion-pills">
+                {EMOTION_OPTIONS.map(opt => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    className={`emotion-pill ${form.emotion === opt.label ? 'active' : ''}`}
+                    onClick={() => updateField('emotion', opt.label)}
+                  >
+                    {opt.emoji} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mistake Checkbox */}
+            <div className="mistake-checkbox-row">
+              <label className="mistake-label">Mistake Made?</label>
+              <label className="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  checked={hasMistake}
+                  onChange={e => {
+                    setHasMistake(e.target.checked);
+                    if (!e.target.checked) updateField('mistake', '');
+                  }}
+                />
+                <span className="custom-checkbox"></span>
+                <span>Yes, I made a mistake in this trade</span>
+              </label>
+            </div>
+
+            {hasMistake && (
+              <div className="form-group" style={{ marginTop: 12 }}>
+                <div className="select-wrapper">
+                  <select value={form.mistake} onChange={e => updateField('mistake', e.target.value)}>
+                    <option value="">Select mistake...</option>
+                    <option>Early Entry</option>
+                    <option>No Stop Loss</option>
+                    <option>Overtrading</option>
+                    <option>Revenge Trade</option>
+                    <option>Moved SL</option>
+                    <option>Late Exit</option>
+                  </select>
+                  <ChevronDown size={14} className="select-icon" />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Submit */}
+          {/* Submit Buttons */}
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={handleReset}>
-              <X size={16} /> Reset Form
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={submitted && !isFormValid}
-            >
-              <Save size={16} /> Save Trade
+            <button type="button" className="btn-secondary" onClick={handleReset}>Cancel</button>
+            <button type="button" className="btn-primary-outlined" onClick={() => saveTrade(true)}>Save as Draft</button>
+            <button type="submit" className="btn-primary" disabled={submitted && !isFormValid}>
+              <CheckCircle2 size={16} /> Save Trade
             </button>
           </div>
         </div>
 
         {/* ===== RIGHT: LIVE PREVIEW ===== */}
         <div className="add-trade-preview">
+          {/* Trade Summary Preview with Donut */}
           <div className="card preview-card sticky-preview animate-in">
             <div className="form-section-header">
-              <Eye size={18} color="var(--green-600)" />
-              <h3>Live Preview</h3>
+              <span style={{ fontSize: '1rem' }}>📊</span>
+              <h3>Trade Summary Preview</h3>
             </div>
 
-            {/* P&L Display */}
-            <div className={`preview-pnl ${livePnL >= 0 ? 'positive' : 'negative'}`}>
-              <span className="preview-pnl-label">Estimated P&L</span>
-              <span className="preview-pnl-value">
-                {form.entryPrice && form.exitPrice && form.quantity
-                  ? formatCurrency(livePnL)
-                  : '—'}
-              </span>
+            <div className="preview-donut-row">
+              {/* Donut */}
+              <div className="preview-donut-wrap">
+                <svg viewBox="0 0 120 120" className="preview-donut-svg">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border-light)" strokeWidth="8" />
+                  <circle
+                    cx="60" cy="60" r="54" fill="none"
+                    stroke={livePnL >= 0 ? 'var(--green-500)' : 'var(--red-400)'}
+                    strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray={donutCircumference}
+                    strokeDashoffset={donutOffset}
+                    style={{ transform: 'rotate(-90deg)', transformOrigin: '60px 60px', transition: 'stroke-dashoffset 0.5s ease' }}
+                  />
+                </svg>
+                <div className="preview-donut-center">
+                  <div className={`donut-pnl ${livePnL >= 0 ? 'positive' : 'negative'}`}>
+                    {form.entryPrice && form.exitPrice && form.quantity ? formatCurrency(livePnL) : '—'}
+                  </div>
+                  <div className="donut-label">{livePnL >= 0 ? 'Profit' : 'Loss'}</div>
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div className="preview-donut-metrics">
+                <div className="preview-donut-metric">
+                  <span className="pdm-dot">○</span>
+                  <span>Risk</span>
+                  <strong>₹{liveRisk > 0 ? liveRisk.toLocaleString('en-IN') : '0'}</strong>
+                </div>
+                <div className="preview-donut-metric">
+                  <span className="pdm-dot">○</span>
+                  <span>Reward</span>
+                  <strong>₹{liveReward > 0 ? liveReward.toLocaleString('en-IN') : '0'}</strong>
+                </div>
+                <div className="preview-donut-metric">
+                  <span className="pdm-dot">○</span>
+                  <span>Risk : Reward</span>
+                  <strong>{liveRR > 0 ? `1 : ${liveRR.toFixed(2)}` : '—'}</strong>
+                </div>
+                <div className="preview-donut-metric">
+                  <span className="pdm-dot">○</span>
+                  <span>R Multiple</span>
+                  <strong className={liveRMultiple >= 0 ? 'positive' : 'negative'}>
+                    {liveRMultiple !== 0 ? `${liveRMultiple >= 0 ? '+' : ''}${liveRMultiple.toFixed(2)}R` : '—'}
+                  </strong>
+                </div>
+              </div>
             </div>
 
-            {/* Key Metrics */}
-            <div className="preview-metrics">
-              <div className="preview-metric">
-                <Scale size={14} />
-                <span>Risk : Reward</span>
-                <strong>{liveRR > 0 ? `1 : ${liveRR.toFixed(2)}` : '—'}</strong>
+            {/* Win/Loss message */}
+            {form.entryPrice > 0 && form.exitPrice > 0 && form.quantity > 0 && (
+              <div className={`preview-message ${livePnL >= 0 ? 'win' : 'lose'}`}>
+                <span>{livePnL >= 0 ? '🎯' : '📉'}</span>
+                <div>
+                  <strong>{livePnL >= 0 ? 'This is a winning trade!' : 'This trade is at a loss.'}</strong>
+                  <span>{livePnL >= 0 ? 'Your R:R is positive. Well executed.' : 'Review your entry/exit levels.'}</span>
+                </div>
               </div>
-              <div className="preview-metric">
-                <Zap size={14} />
-                <span>R-Multiple</span>
-                <strong className={liveRMultiple >= 0 ? 'positive' : 'negative'}>
-                  {liveRMultiple !== 0 ? `${liveRMultiple >= 0 ? '+' : ''}${liveRMultiple.toFixed(2)}R` : '—'}
-                </strong>
-              </div>
-              <div className="preview-metric">
-                <TrendingDown size={14} />
-                <span>Risk (₹)</span>
-                <strong className="negative">{liveRisk > 0 ? formatCurrency(-liveRisk).replace('+', '') : '—'}</strong>
-              </div>
-              <div className="preview-metric">
-                <TrendingUp size={14} />
-                <span>Reward (₹)</span>
-                <strong className="positive">{liveReward > 0 ? formatCurrency(liveReward) : '—'}</strong>
-              </div>
-            </div>
+            )}
+          </div>
 
-            {/* Trade Summary */}
-            <div className="preview-summary">
-              <h4>Trade Summary</h4>
-              <div className="preview-row">
-                <span>Instrument</span>
-                <strong>{form.instrument || '—'}</strong>
-              </div>
-              <div className="preview-row">
-                <span>Direction</span>
-                <strong>
-                  <span className={`badge ${form.direction === 'Long' ? 'badge-long' : 'badge-short'}`}>
-                    {form.direction === 'Long' ? '↑' : '↓'} {form.direction}
-                  </span>
-                </strong>
-              </div>
-              <div className="preview-row">
-                <span>Setup</span>
-                <strong>{form.setup || '—'}</strong>
-              </div>
-              <div className="preview-row">
-                <span>Date</span>
-                <strong>{form.date ? new Date(form.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</strong>
-              </div>
-              <div className="preview-row">
-                <span>Entry → Exit</span>
-                <strong>
-                  {form.entryPrice ? `₹${form.entryPrice.toLocaleString()}` : '—'}
-                  {' → '}
-                  {form.exitPrice ? `₹${form.exitPrice.toLocaleString()}` : '—'}
-                </strong>
-              </div>
-              <div className="preview-row">
-                <span>Quantity</span>
-                <strong>{form.quantity || '—'}</strong>
-              </div>
-              {form.fees > 0 && (
-                <div className="preview-row">
-                  <span>Fees</span>
-                  <strong>₹{form.fees.toLocaleString()}</strong>
-                </div>
-              )}
-              {form.emotion !== 'Neutral' && (
-                <div className="preview-row">
-                  <span>Emotion</span>
-                  <strong>{form.emotion}</strong>
-                </div>
-              )}
-              {form.mistake && (
-                <div className="preview-row">
-                  <span>Mistake</span>
-                  <strong className="negative">{form.mistake}</strong>
-                </div>
-              )}
+          {/* Upload Screenshot */}
+          <div className="card form-section animate-in" style={{ marginTop: 16 }}>
+            <div className="form-section-header">
+              <Image size={18} color="var(--text-secondary)" />
+              <h3>Upload Screenshot</h3>
             </div>
+            <div
+              className="screenshot-dropzone"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload size={32} color="var(--text-muted)" />
+              <p>Drag & drop chart screenshot here</p>
+              <span>or</span>
+              <button type="button" className="btn-outline-green" style={{ marginTop: 8 }}>
+                <Image size={14} /> Choose File
+              </button>
+              <p className="screenshot-hint">PNG, JPG up to 5MB</p>
+              {screenshotName && <p className="screenshot-filename">📎 {screenshotName}</p>}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
           </div>
         </div>
       </form>

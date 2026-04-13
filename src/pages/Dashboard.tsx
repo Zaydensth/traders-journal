@@ -25,7 +25,7 @@ import {
   getSetupEdges,
   getMistakeHeatmap,
   getEquityCurve,
-  getDisciplineScore,
+
   calcPnL,
   calcRiskReward,
   formatCurrency
@@ -40,7 +40,7 @@ export default function Dashboard() {
   const [edges, setEdges] = useState<SetupEdge[]>([]);
   const [heatmap, setHeatmap] = useState<MistakeEntry[]>([]);
   const [equityCurve, setEquityCurve] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
-  const [disciplineScore, setDisciplineScore] = useState(100);
+
   const chartRef = useRef<ChartJS<'line'>>(null);
 
   useEffect(() => {
@@ -51,14 +51,13 @@ export default function Dashboard() {
     setEdges(getSetupEdges(data));
     setHeatmap(getMistakeHeatmap(data));
     setEquityCurve(getEquityCurve(data));
-    setDisciplineScore(getDisciplineScore(data));
+
   }, []);
 
   if (!stats) return null;
 
   const recentTrades = trades.slice(0, 5);
-  const circumference = 2 * Math.PI * 42;
-  const disciplineOffset = circumference - (disciplineScore / 100) * circumference;
+
 
   const equityChartData = {
     labels: equityCurve.labels,
@@ -340,53 +339,6 @@ export default function Dashboard() {
                   ))}
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* ===== DISCIPLINE SCORE CARD ===== */}
-          <div className="card animate-in">
-            <div className="card-header">
-              <div className="card-title">
-                <CheckCircle2 size={18} color="var(--teal-500)" />
-                Discipline Score
-              </div>
-            </div>
-            <div className="discipline-widget">
-              <div className="discipline-circle" style={{ width: 130, height: 130, margin: '0 auto 12px' }}>
-                <svg viewBox="0 0 100 100" style={{ width: 130, height: 130 }}>
-                  <circle className="bg" cx="50" cy="50" r="42" />
-                  <circle
-                    className="progress"
-                    cx="50" cy="50" r="42"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={disciplineOffset}
-                  />
-                </svg>
-                <div className="discipline-value">
-                  <div className="number" style={{ fontSize: '2.2rem' }}>{disciplineScore}</div>
-                  <div className="total">/ 100</div>
-                </div>
-              </div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 8 }}>
-                {disciplineScore >= 90 ? '🔥 Excellent discipline! Keep it up.' :
-                 disciplineScore >= 70 ? '💪 Good discipline. Room for improvement.' :
-                 disciplineScore >= 50 ? '⚠️ Moderate. Watch your mistakes.' :
-                 '🚨 Needs attention. Review your trading habits.'}
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 16 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>MISTAKE-FREE</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-600)' }}>
-                    {trades.filter(t => !t.mistake || t.mistake === '' || t.mistake === 'None').length}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>WITH MISTAKES</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--red-500)' }}>
-                    {trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

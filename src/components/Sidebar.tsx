@@ -1,10 +1,23 @@
 import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
   AlertTriangle, BookOpen, Settings, TrendingUp
 } from 'lucide-react';
+import { storage } from '../utils/storage';
+import { getDisciplineScore } from '../utils/calculations';
 
 export default function Sidebar() {
+  const [score, setScore] = useState(100);
+
+  useEffect(() => {
+    const trades = storage.getTrades();
+    setScore(getDisciplineScore(trades));
+  }, []);
+
+  const circumference = 2 * Math.PI * 38;
+  const offset = circumference - (score / 100) * circumference;
+
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
@@ -47,6 +60,26 @@ export default function Sidebar() {
           Settings
         </NavLink>
       </nav>
+
+      {/* Discipline Score Widget — below Settings */}
+      <div className="sidebar-discipline">
+        <div className="sidebar-widget-title">Discipline Score</div>
+        <div className="discipline-circle">
+          <svg viewBox="0 0 100 100">
+            <circle className="bg" cx="50" cy="50" r="38" />
+            <circle
+              className="progress"
+              cx="50" cy="50" r="38"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+            />
+          </svg>
+          <div className="discipline-value">
+            <div className="number">{score}</div>
+            <div className="total">/ 100</div>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
