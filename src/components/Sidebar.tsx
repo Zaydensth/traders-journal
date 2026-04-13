@@ -79,6 +79,9 @@ export default function Sidebar() {
             <div className="total">/ 100</div>
           </div>
         </div>
+        <div className="discipline-weekly">
+          ▲ +7 pts this week
+        </div>
       </div>
     </aside>
   );

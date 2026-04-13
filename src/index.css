@@ -1681,6 +1681,13 @@ input, select, textarea { font-family: inherit; outline: none; }
   text-align: center;
 }
 
+.discipline-weekly {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green-600);
+  margin-top: 8px;
+}
+
 /* =================== DONUT PREVIEW =================== */
 .preview-donut-row {
   display: flex;
