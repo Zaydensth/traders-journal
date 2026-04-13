@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { PiMoney } from 'react-icons/pi';
+import { FaSackDollar } from 'react-icons/fa6';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -175,7 +175,7 @@ export default function Dashboard() {
         {/* ===== STAT CARDS ===== */}
         <div className="stat-cards">
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green"><PiMoney size={24} /></div>
+            <div className="stat-card-icon green"><FaSackDollar size={22} /></div>
             <div className="stat-card-label">Net P&L</div>
             <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.netPnL)}
