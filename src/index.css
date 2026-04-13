@@ -1707,7 +1707,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 /* =================== SIDEBAR DISCIPLINE WIDGET =================== */
 .sidebar-discipline {
   margin: 12px;
-  margin-top: 24px;
+  margin-top: 40px;
   padding: 16px;
   background: var(--bg-primary);
   border-radius: var(--radius-md);
