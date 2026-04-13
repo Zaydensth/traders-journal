@@ -12,6 +12,12 @@ import {
   Legend
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
+import {
+  DollarSign, Target, Scale, BarChart3, TrendingDown, TrendingUp,
+  Calendar, Settings, Bell, ChevronDown, Clock, ArrowUpRight,
+  ArrowDownRight, Flame, CheckCircle2, LineChart, PieChart,
+  Zap, ArrowRight, LayoutGrid, Rocket, RefreshCw
+} from 'lucide-react';
 import type { Trade, TradeStats, SetupEdge, MistakeEntry } from '../types/trade';
 import { storage } from '../utils/storage';
 import {
@@ -140,9 +146,9 @@ export default function Dashboard() {
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn">📅 This Week</button>
-          <button className="header-btn">⚙️</button>
-          <button className="header-btn">🔔</button>
+          <button className="header-btn"><Calendar size={15} /> This Week</button>
+          <button className="header-btn"><Settings size={15} /></button>
+          <button className="header-btn"><Bell size={15} /></button>
           <div className="user-avatar">RT</div>
         </div>
       </div>
@@ -151,7 +157,7 @@ export default function Dashboard() {
         {/* ===== STAT CARDS ===== */}
         <div className="stat-cards">
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green">💰</div>
+            <div className="stat-card-icon green"><DollarSign size={20} /></div>
             <div className="stat-card-label">Net P&L</div>
             <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.netPnL)}
@@ -162,7 +168,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon blue">🎯</div>
+            <div className="stat-card-icon blue"><Target size={20} /></div>
             <div className="stat-card-label">Win Rate</div>
             <div className="stat-card-value">{stats.winRate.toFixed(1)}%</div>
             <div className={`stat-card-change ${stats.winRateChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -171,7 +177,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon purple">⚖️</div>
+            <div className="stat-card-icon purple"><Scale size={20} /></div>
             <div className="stat-card-label">Avg Risk : Reward</div>
             <div className="stat-card-value">1 : {stats.avgRiskReward.toFixed(2)}</div>
             <div className={`stat-card-change ${stats.rrChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -180,7 +186,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon orange">📊</div>
+            <div className="stat-card-icon orange"><BarChart3 size={20} /></div>
             <div className="stat-card-label">Expectancy</div>
             <div className={`stat-card-value ${stats.expectancy >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.expectancy)}/trade
@@ -188,7 +194,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon red">📉</div>
+            <div className="stat-card-icon red"><TrendingDown size={20} /></div>
             <div className="stat-card-label">Max Drawdown</div>
             <div className="stat-card-value negative">
               -{formatCurrency(stats.maxDrawdown).replace('+', '')}
@@ -196,7 +202,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon teal">📈</div>
+            <div className="stat-card-icon teal"><TrendingUp size={20} /></div>
             <div className="stat-card-label">Trades This Week</div>
             <div className="stat-card-value">{stats.tradesThisWeek}</div>
             <div className="stat-card-change">
@@ -210,10 +216,10 @@ export default function Dashboard() {
           <div className="card animate-in">
             <div className="card-header">
               <div className="card-title">
-                <span className="card-title-icon">📈</span>
+                <LineChart size={18} color="var(--green-600)" />
                 Equity Curve
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>Daily ▾</button>
+              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>Daily <ChevronDown size={13} /></button>
             </div>
             <div className="chart-container">
               <Line ref={chartRef} data={equityChartData} options={equityChartOptions} />
@@ -223,7 +229,7 @@ export default function Dashboard() {
           <div className="card animate-in">
             <div className="card-header">
               <div className="card-title">
-                <span className="card-title-icon">🎯</span>
+                <PieChart size={18} color="var(--green-600)" />
                 Performance Snapshot
               </div>
             </div>
@@ -247,7 +253,7 @@ export default function Dashboard() {
                   <span className="donut-legend-value">{stats.losses}</span>
                 </div>
                 <div className="donut-total">
-                  📊 Total Trades <span>{stats.totalTrades}</span>
+                  <BarChart3 size={14} /> Total Trades <span>{stats.totalTrades}</span>
                 </div>
               </div>
             </div>
@@ -259,10 +265,10 @@ export default function Dashboard() {
           <div className="card animate-in">
             <div className="card-header">
               <div className="card-title">
-                <span className="card-title-icon">✅</span>
+                <CheckCircle2 size={18} color="var(--green-600)" />
                 Edge by Setup
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Month ▾</button>
+              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Month <ChevronDown size={13} /></button>
             </div>
             <div className="card-body-np">
               <table className="data-table">
@@ -279,8 +285,8 @@ export default function Dashboard() {
                   {edges.map(edge => (
                     <tr key={edge.setup}>
                       <td style={{ fontWeight: 600 }}>
-                        <span style={{ marginRight: 6 }}>
-                          {edge.setup === 'EMA + VWAP' ? '📊' : edge.setup === 'Breakout' ? '🚀' : '🔄'}
+                        <span style={{ marginRight: 6, display: 'inline-flex' }}>
+                          {edge.setup === 'EMA + VWAP' ? <LayoutGrid size={14} /> : edge.setup === 'Breakout' ? <Rocket size={14} /> : <RefreshCw size={14} />}
                         </span>
                         {edge.setup}
                       </td>
@@ -309,10 +315,10 @@ export default function Dashboard() {
           <div className="card animate-in">
             <div className="card-header">
               <div className="card-title">
-                <span className="card-title-icon">🔥</span>
+                <Flame size={18} color="var(--orange-500)" />
                 Mistake Heatmap
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Week ▾</button>
+              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Week <ChevronDown size={13} /></button>
             </div>
             <div className="heatmap-grid">
               <div className="heatmap-header">
@@ -363,9 +369,9 @@ export default function Dashboard() {
         {/* ===== RECENT TRADES ===== */}
         <div className="card animate-in">
           <div className="recent-trades-header">
-            <h3>🕐 Recent Trades</h3>
+            <h3><Clock size={18} style={{ marginRight: 6 }} /> Recent Trades</h3>
             <Link to="/all-trades" className="view-all-link">
-              View All Trades →
+              View All Trades <ArrowRight size={14} />
             </Link>
           </div>
           <div className="card-body-np">
