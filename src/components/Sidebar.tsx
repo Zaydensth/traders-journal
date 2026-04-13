@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
-  AlertTriangle, BookOpen, Settings, TrendingUp
+  AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb
 } from 'lucide-react';
 import { storage } from '../utils/storage';
 import { getDisciplineScore } from '../utils/calculations';
@@ -65,7 +65,12 @@ export default function Sidebar() {
       {/* Bottom Widget — Pro Tip on Add Trade, Discipline Score elsewhere */}
       {location.pathname === '/add-trade' ? (
         <div className="sidebar-pro-tip">
-          <div className="sidebar-widget-title">💡 Pro Tip</div>
+          <div className="pro-tip-header">
+            <div className="pro-tip-icon">
+              <Lightbulb size={15} />
+            </div>
+            <span className="sidebar-widget-title" style={{ margin: 0 }}>Pro Tip</span>
+          </div>
           <p>Always define your stop loss before entering a trade. Risk only 1–2% of capital per trade.</p>
         </div>
       ) : (
