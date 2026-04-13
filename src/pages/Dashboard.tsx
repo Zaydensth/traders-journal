@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
-  Target, Scale, BarChart3, TrendingDown, Activity,
+  Coins, Target, Scale, BarChart3, TrendingDown, Activity,
   Calendar, Bell, ChevronDown, Clock,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw
@@ -174,20 +174,7 @@ export default function Dashboard() {
         {/* ===== STAT CARDS ===== */}
         <div className="stat-cards">
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                {/* top knot */}
-                <path d="M9.5 4a2.5 2.5 0 0 1 5 0" />
-                {/* neck tie */}
-                <path d="M8.5 6.5C8.5 5.7 10 5 12 5s3.5.7 3.5 1.5S14 8 12 8 8.5 7.3 8.5 6.5z" />
-                {/* bag body */}
-                <path d="M5 14.5C5 18.6 8.1 22 12 22s7-3.4 7-7.5C19 10.8 16 8 12 8S5 10.8 5 14.5z" />
-                {/* currency cross inside */}
-                <path d="M12 12v5M9.5 14.5h5" />
-              </svg>
-            </div>
+            <div className="stat-card-icon green"><Coins size={22} /></div>
             <div className="stat-card-label">Net P&L</div>
             <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.netPnL)}
@@ -198,7 +185,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon blue"><Target size={20} /></div>
+            <div className="stat-card-icon blue"><Target size={22} /></div>
             <div className="stat-card-label">Win Rate</div>
             <div className="stat-card-value">{stats.winRate.toFixed(1)}%</div>
             <div className={`stat-card-change ${stats.winRateChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -207,7 +194,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon purple"><Scale size={20} /></div>
+            <div className="stat-card-icon purple"><Scale size={22} /></div>
             <div className="stat-card-label">Avg Risk : Reward</div>
             <div className="stat-card-value">1 : {stats.avgRiskReward.toFixed(2)}</div>
             <div className={`stat-card-change ${stats.rrChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -216,7 +203,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon orange"><BarChart3 size={20} /></div>
+            <div className="stat-card-icon orange"><BarChart3 size={22} /></div>
             <div className="stat-card-label">Expectancy</div>
             <div className={`stat-card-value ${stats.expectancy >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.expectancy)}/trade
@@ -224,7 +211,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon red"><TrendingDown size={20} /></div>
+            <div className="stat-card-icon red"><TrendingDown size={22} /></div>
             <div className="stat-card-label">Max Drawdown</div>
             <div className="stat-card-value negative">
               -{formatCurrency(stats.maxDrawdown).replace('+', '')}
@@ -232,7 +219,7 @@ export default function Dashboard() {
           </div>
 
           <div className="stat-card animate-in">
-            <div className="stat-card-icon teal"><Activity size={20} /></div>
+            <div className="stat-card-icon teal"><Activity size={22} /></div>
             <div className="stat-card-label">Trades This Week</div>
             <div className="stat-card-value">{stats.tradesThisWeek}</div>
             <div className="stat-card-change">
