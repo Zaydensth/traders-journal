@@ -15,12 +15,13 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Target, Scale, BarChart3, TrendingDown, Activity,
-  Calendar, Bell, ChevronDown, Clock, Sun,
+  Calendar, Bell, ChevronDown, Clock, Sun, Moon,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw
 } from 'lucide-react';
 import type { Trade, TradeStats, SetupEdge, MistakeEntry } from '../types/trade';
 import { storage } from '../utils/storage';
+import { toggleTheme, getTheme } from '../utils/theme';
 import {
   getTradeStats,
   getSetupEdges,
@@ -41,6 +42,7 @@ export default function Dashboard() {
   const [edges, setEdges] = useState<SetupEdge[]>([]);
   const [heatmap, setHeatmap] = useState<MistakeEntry[]>([]);
   const [equityCurve, setEquityCurve] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
+  const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
 
   const chartRef = useRef<ChartJS<'line'>>(null);
 
@@ -161,14 +163,20 @@ export default function Dashboard() {
             })()}
             <ChevronDown size={13} />
           </button>
-          <button className="header-btn"><Sun size={15} /></button>
-          <button className="header-btn"><Bell size={15} /></button>
+          <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="header-btn"><Bell size={15} /></button>
+            <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />
+          </div>
           <div className="user-profile-badge">
             <div className="user-avatar">RT</div>
             <div className="user-profile-info">
               <span className="user-profile-name">Rahul Trader</span>
               <span className="user-profile-plan">Pro Plan</span>
             </div>
+            <ChevronDown size={14} color="var(--text-secondary)" />
           </div>
         </div>
       </div>
