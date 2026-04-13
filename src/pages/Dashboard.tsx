@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { PiMoney } from 'react-icons/pi';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -174,22 +175,7 @@ export default function Dashboard() {
         {/* ===== STAT CARDS ===== */}
         <div className="stat-cards">
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green">
-              {/* Money Bag SVG */}
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                {/* knot / simpul atas */}
-                <ellipse cx="12" cy="5" rx="3" ry="1.8" />
-                {/* leher bag */}
-                <path d="M9 6.5c0 1.2 1.3 2 3 2s3-.8 3-2" />
-                {/* badan bag — bulat besar */}
-                <path d="M5 16a7 7 0 1 0 14 0c0-4.1-3.1-7.5-7-7.5S5 11.9 5 16z" />
-                {/* simbol mata uang di dalam */}
-                <path d="M12 13v4" />
-                <path d="M10 15h4" />
-              </svg>
-            </div>
+            <div className="stat-card-icon green"><PiMoney size={24} /></div>
             <div className="stat-card-label">Net P&L</div>
             <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
               {formatCurrency(stats.netPnL)}
