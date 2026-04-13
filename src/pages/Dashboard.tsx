@@ -14,9 +14,9 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   DollarSign, Target, Scale, BarChart3, TrendingDown, TrendingUp,
-  Calendar, Settings, Bell, ChevronDown, Clock, ArrowUpRight,
-  ArrowDownRight, Flame, CheckCircle2, LineChart, PieChart,
-  Zap, ArrowRight, LayoutGrid, Rocket, RefreshCw
+  Calendar, Settings, Bell, ChevronDown, Clock,
+  Flame, CheckCircle2, LineChart, PieChart,
+  ArrowRight, LayoutGrid, Rocket, RefreshCw
 } from 'lucide-react';
 import type { Trade, TradeStats, SetupEdge, MistakeEntry } from '../types/trade';
 import { storage } from '../utils/storage';
