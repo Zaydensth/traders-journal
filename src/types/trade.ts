@@ -2,6 +2,7 @@ export interface Trade {
   id: string;
   date: string;
   time: string;
+  exitTime?: string;
   instrument: string;
   assetType: 'Index' | 'Stocks' | 'Forex' | 'Crypto' | 'Options';
   setup: string;

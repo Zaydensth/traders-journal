@@ -15,7 +15,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Target, Scale, BarChart3, TrendingDown, Activity,
-  Calendar, Bell, ChevronDown, Clock,
+  Calendar, Bell, ChevronDown, Clock, Sun,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw
 } from 'lucide-react';
@@ -157,9 +157,11 @@ export default function Dashboard() {
               const today = new Date();
               const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
               const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              return `${fmt(monthStart)} → ${fmt(today)}, ${today.getFullYear()}`;
+              return `${fmt(monthStart)} – ${fmt(today)}, ${today.getFullYear()}`;
             })()}
+            <ChevronDown size={13} />
           </button>
+          <button className="header-btn"><Sun size={15} /></button>
           <button className="header-btn"><Bell size={15} /></button>
           <div className="user-profile-badge">
             <div className="user-avatar">RT</div>
@@ -252,6 +254,14 @@ export default function Dashboard() {
                 <PieChart size={18} color="var(--green-600)" />
                 Performance Snapshot
               </div>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                {(() => {
+                  const today = new Date();
+                  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  return `${fmt(monthStart)} – ${fmt(today)}`;
+                })()}
+              </span>
             </div>
             <div className="donut-stats">
               <div className="donut-chart-wrap">
