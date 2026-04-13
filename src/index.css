@@ -1396,6 +1396,165 @@ input, select, textarea { font-family: inherit; outline: none; }
   to { opacity: 1; transform: scale(1); }
 }
 
+/* =================== DROPDOWN PANELS =================== */
+.dropdown-wrap {
+  position: relative;
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-primary);
+}
+
+.dropdown-footer {
+  padding: 8px 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+  min-width: 224px;
+}
+
+.dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.dropdown-user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.dropdown-user-plan {
+  font-size: 0.72rem;
+  color: var(--green-600);
+  font-weight: 500;
+}
+
+/* Notification dropdown */
+.notif-dropdown {
+  min-width: 288px;
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+
+.notif-panel-header span:first-child {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.notif-badge {
+  background: var(--green-600);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 2px 7px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.notif-item:hover {
+  background: var(--bg-primary);
+}
+
+.notif-dot-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notif-dot-indicator.green { background: var(--green-500); }
+.notif-dot-indicator.red { background: var(--red-500); }
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-trade-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.notif-trade-value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.notif-trade-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.notif-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+}
+
 /* =================== RESPONSIVE: ADD TRADE =================== */
 @media (max-width: 1100px) {
   .add-trade-layout {

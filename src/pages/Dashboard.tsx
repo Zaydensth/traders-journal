@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaSackDollar } from 'react-icons/fa6';
 import {
   Chart as ChartJS,
@@ -17,7 +17,8 @@ import {
   Target, Scale, BarChart3, TrendingDown, Activity,
   Calendar, Bell, ChevronDown, Clock, Sun, Moon,
   Flame, CheckCircle2, LineChart, PieChart,
-  ArrowRight, LayoutGrid, Rocket, RefreshCw
+  ArrowRight, LayoutGrid, Rocket, RefreshCw,
+  Settings, LayoutDashboard
 } from 'lucide-react';
 import type { Trade, TradeStats, SetupEdge, MistakeEntry } from '../types/trade';
 import { storage } from '../utils/storage';
@@ -27,7 +28,6 @@ import {
   getSetupEdges,
   getMistakeHeatmap,
   getEquityCurve,
-
   calcPnL,
   calcRiskReward,
   formatCurrency
@@ -43,8 +43,14 @@ export default function Dashboard() {
   const [heatmap, setHeatmap] = useState<MistakeEntry[]>([]);
   const [equityCurve, setEquityCurve] = useState<{ labels: string[]; data: number[] }>({ labels: [], data: [] });
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
+  const [showProfile, setShowProfile] = useState(false);
+  const [showBell, setShowBell] = useState(false);
+  const [bellRead, setBellRead] = useState(false);
 
   const chartRef = useRef<ChartJS<'line'>>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSampleData();
@@ -54,7 +60,15 @@ export default function Dashboard() {
     setEdges(getSetupEdges(data));
     setHeatmap(getMistakeHeatmap(data));
     setEquityCurve(getEquityCurve(data));
+  }, []);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   if (!stats) return null;
@@ -166,17 +180,69 @@ export default function Dashboard() {
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-          <div style={{ position: 'relative' }}>
-            <button className="header-btn"><Bell size={15} /></button>
-            <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />
-          </div>
-          <div className="user-profile-badge">
-            <div className="user-avatar">RT</div>
-            <div className="user-profile-info">
-              <span className="user-profile-name">Rahul Trader</span>
-              <span className="user-profile-plan">Pro Plan</span>
+
+          {/* Bell */}
+          <div className="dropdown-wrap" ref={bellRef}>
+            <div style={{ position: 'relative' }}>
+              <button className="header-btn" onClick={() => { setShowBell(v => !v); setBellRead(true); setShowProfile(false); }}>
+                <Bell size={15} />
+              </button>
+              {!bellRead && <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />}
             </div>
-            <ChevronDown size={14} color="var(--text-secondary)" />
+            {showBell && (
+              <div className="dropdown-panel notif-dropdown">
+                <div className="notif-panel-header">
+                  <span>Recent Trades</span>
+                  <span className="notif-badge">{Math.min(trades.length, 5)}</span>
+                </div>
+                {trades.slice(0, 5).map(trade => {
+                  const pnl = calcPnL(trade);
+                  return (
+                    <div key={trade.id} className="notif-item">
+                      <div className={`notif-dot-indicator ${pnl >= 0 ? 'green' : 'red'}`} />
+                      <div className="notif-content">
+                        <div className="notif-trade-title">{trade.instrument} · {trade.direction}</div>
+                        <div className={`notif-trade-value ${pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pnl)}</div>
+                      </div>
+                      <div className="notif-trade-date">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                    </div>
+                  );
+                })}
+                {trades.length === 0 && <div className="notif-empty">No trades yet</div>}
+              </div>
+            )}
+          </div>
+
+          {/* Profile */}
+          <div className="dropdown-wrap" ref={profileRef}>
+            <div className="user-profile-badge" onClick={() => { setShowProfile(v => !v); setShowBell(false); }}>
+              <div className="user-avatar">RT</div>
+              <div className="user-profile-info">
+                <span className="user-profile-name">Rahul Trader</span>
+                <span className="user-profile-plan">Pro Plan</span>
+              </div>
+              <ChevronDown size={14} color="var(--text-secondary)" />
+            </div>
+            {showProfile && (
+              <div className="dropdown-panel profile-dropdown">
+                <div className="dropdown-user-header">
+                  <div className="user-avatar" style={{ width: 38, height: 38, flexShrink: 0 }}>RT</div>
+                  <div>
+                    <div className="dropdown-user-name">Rahul Trader</div>
+                    <div className="dropdown-user-plan">Pro Plan · Active</div>
+                  </div>
+                </div>
+                <div className="dropdown-divider" />
+                <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/'); }}>
+                  <LayoutDashboard size={14} /> Dashboard
+                </button>
+                <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/settings'); }}>
+                  <Settings size={14} /> Settings
+                </button>
+                <div className="dropdown-divider" />
+                <div className="dropdown-footer">v1.0 · Trader's Journal</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

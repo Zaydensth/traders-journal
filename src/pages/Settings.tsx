@@ -2,8 +2,9 @@ import { useState } from 'react';
 import {
   User, Lock, Shield, Bell, Download, Upload,
   Trash2, Save, ChevronDown, CreditCard, Check,
-  Settings2, AlertTriangle, Scale
+  Settings2, AlertTriangle, Scale, Moon
 } from 'lucide-react';
+import { toggleTheme, getTheme } from '../utils/theme';
 
 interface SettingsState {
   fullName: string;
@@ -37,6 +38,7 @@ export default function Settings() {
   });
 
   const [savedSection, setSavedSection] = useState('');
+  const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
 
   function updateField<K extends keyof SettingsState>(field: K, value: SettingsState[K]) {
     setSettings(prev => ({ ...prev, [field]: value }));
@@ -188,7 +190,7 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="settings-toggle-row" style={{ borderBottom: 'none', padding: '8px 0' }}>
+            <div className="settings-toggle-row" style={{ padding: '8px 0' }}>
               <div className="settings-toggle-info">
                 <div>
                   <strong>Enable AI Insights</strong>
@@ -199,6 +201,23 @@ export default function Settings() {
                   type="checkbox"
                   checked={settings.aiInsights}
                   onChange={e => updateField('aiInsights', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div className="settings-toggle-row" style={{ borderBottom: 'none', padding: '8px 0' }}>
+              <div className="settings-toggle-info">
+                <Moon size={18} />
+                <div>
+                  <strong>Dark Mode</strong>
+                </div>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={isDark}
+                  onChange={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}
                 />
                 <span className="toggle-slider"></span>
               </label>
