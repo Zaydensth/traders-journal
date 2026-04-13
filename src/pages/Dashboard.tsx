@@ -175,12 +175,17 @@ export default function Dashboard() {
         <div className="stat-cards">
           <div className="stat-card animate-in">
             <div className="stat-card-icon green">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 2h4l-1 3H11L10 2z" />
-                <path d="M12 5C7.6 5 4 8.4 4 13c0 3.9 3.6 6 8 6s8-2.1 8-6c0-4.6-3.6-8-8-8z" />
-                <path d="M12 10v4M10 12h4" />
+                {/* top knot */}
+                <path d="M9.5 4a2.5 2.5 0 0 1 5 0" />
+                {/* neck tie */}
+                <path d="M8.5 6.5C8.5 5.7 10 5 12 5s3.5.7 3.5 1.5S14 8 12 8 8.5 7.3 8.5 6.5z" />
+                {/* bag body */}
+                <path d="M5 14.5C5 18.6 8.1 22 12 22s7-3.4 7-7.5C19 10.8 16 8 12 8S5 10.8 5 14.5z" />
+                {/* currency cross inside */}
+                <path d="M12 12v5M9.5 14.5h5" />
               </svg>
             </div>
             <div className="stat-card-label">Net P&L</div>
