@@ -8,7 +8,7 @@ import {
 interface SettingsState {
   fullName: string;
   email: string;
-  confirmEmail: string;
+  phoneNumber: string;
   password: string;
   twoFactor: boolean;
   riskPerTrade: string;
@@ -24,7 +24,7 @@ export default function Settings() {
   const [settings, setSettings] = useState<SettingsState>({
     fullName: 'Demo Trader',
     email: 'demotrader@email.com',
-    confirmEmail: 'demotrader@email.com',
+    phoneNumber: '+91 98765 43210',
     password: '••••••••••',
     twoFactor: true,
     riskPerTrade: '1',
@@ -102,18 +102,12 @@ export default function Settings() {
               />
             </div>
             <div className="form-group">
-              <label style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                <span>Email</span>
-              </label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="email"
-                  value={settings.confirmEmail}
-                  onChange={e => updateField('confirmEmail', e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button className="btn-outline-green" style={{ whiteSpace: 'nowrap' }}>Change Email</button>
-              </div>
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                value={settings.phoneNumber}
+                onChange={e => updateField('phoneNumber', e.target.value)}
+              />
             </div>
           </div>
 

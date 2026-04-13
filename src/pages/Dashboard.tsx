@@ -14,7 +14,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   DollarSign, Target, Scale, BarChart3, TrendingDown, TrendingUp,
-  Calendar, Settings, Bell, ChevronDown, Clock,
+  Calendar, Bell, ChevronDown, Clock,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw
 } from 'lucide-react';
@@ -141,14 +141,27 @@ export default function Dashboard() {
     <>
       <div className="page-header">
         <div className="page-header-left">
-          <h2>Good morning, Trader! 👋</h2>
+          <h2>{(() => {
+            const hr = new Date().getHours();
+            if (hr < 12) return 'Good morning';
+            if (hr < 17) return 'Good afternoon';
+            return 'Good evening';
+          })()}, Trader! 👋</h2>
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn"><Calendar size={15} /> This Week</button>
-          <button className="header-btn"><Settings size={15} /></button>
+          <button className="header-btn">
+            <Calendar size={15} />
+            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </button>
           <button className="header-btn"><Bell size={15} /></button>
-          <div className="user-avatar">RT</div>
+          <div className="user-profile-badge">
+            <div className="user-avatar">RT</div>
+            <div className="user-profile-info">
+              <span className="user-profile-name">Rahul Trader</span>
+              <span className="user-profile-plan">Pro Plan</span>
+            </div>
+          </div>
         </div>
       </div>
 

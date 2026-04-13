@@ -264,6 +264,39 @@ input, select, textarea { font-family: inherit; outline: none; }
   font-size: 0.9rem;
 }
 
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-profile-badge:hover {
+  background: var(--border-light);
+}
+
+.user-profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-profile-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.user-profile-plan {
+  font-size: 0.7rem;
+  color: var(--green-600);
+  font-weight: 500;
+}
+
 .page-content {
   padding: 24px 32px;
 }
@@ -1835,11 +1868,19 @@ input, select, textarea { font-family: inherit; outline: none; }
 }
 
 /* =================== MISTAKE CHECKBOX =================== */
-.mistake-checkbox-row {
+.mistake-checkbox-row,
+.mistake-checkbox-inline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 0;
+}
+
+.mistake-checkbox-row {
+  justify-content: space-between;
+}
+
+.mistake-checkbox-inline {
+  gap: 16px;
 }
 
 .mistake-label {

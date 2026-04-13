@@ -214,7 +214,7 @@ export default function AddTrade() {
             </div>
             <div className="form-grid-3">
               <div className={`form-group ${errors.instrument ? 'has-error' : ''}`}>
-                <label>Instrument *</label>
+                <label>Instrument & Setup *</label>
                 <input type="text" placeholder="e.g. NIFTY 50, RELIANCE" value={form.instrument} onChange={e => updateField('instrument', e.target.value)} />
                 {errors.instrument && <span className="form-error">{errors.instrument}</span>}
               </div>
@@ -306,10 +306,6 @@ export default function AddTrade() {
                 <label>Fees / Commission</label>
                 <input type="number" step="any" placeholder="0.00" value={form.fees || ''} onChange={e => updateField('fees', parseFloat(e.target.value) || 0)} />
               </div>
-              <div className="form-group">
-                <label><Tag size={13} /> Tags (comma-separated)</label>
-                <input type="text" placeholder="e.g. earnings, breakout, scalp" value={form.tags} onChange={e => updateField('tags', e.target.value)} />
-              </div>
             </div>
           </div>
 
@@ -346,8 +342,8 @@ export default function AddTrade() {
               </div>
             </div>
 
-            {/* Mistake Checkbox */}
-            <div className="mistake-checkbox-row">
+            {/* Mistake Checkbox - inline */}
+            <div className="mistake-checkbox-inline">
               <label className="mistake-label">Mistake Made?</label>
               <label className="checkbox-wrapper">
                 <input
@@ -487,6 +483,14 @@ export default function AddTrade() {
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
+          </div>
+
+          {/* Tags — below Upload Screenshot */}
+          <div className="card form-section animate-in" style={{ marginTop: 16 }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label><Tag size={13} /> Tags (comma-separated)</label>
+              <input type="text" placeholder="e.g. earnings, breakout, scalp" value={form.tags} onChange={e => updateField('tags', e.target.value)} />
+            </div>
           </div>
         </div>
       </form>
