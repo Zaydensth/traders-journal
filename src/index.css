@@ -347,7 +347,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 .dashboard-grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 280px;
   gap: 20px;
   margin-bottom: 24px;
 }
@@ -1259,6 +1259,222 @@ input, select, textarea { font-family: inherit; outline: none; }
     grid-template-columns: 1fr;
   }
   .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =================== SETTINGS PAGE =================== */
+.settings-layout {
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 800px;
+}
+
+.settings-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+}
+
+.settings-profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-profile-info strong {
+  font-size: 1.05rem;
+}
+
+.settings-profile-info span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Toggle Switches */
+.settings-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.settings-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.settings-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-toggle-info svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.settings-toggle-info strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.settings-toggle-info span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  transition: 0.3s;
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--green-500);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Data Management Cards */
+.data-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.data-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.data-action-card:hover {
+  border-color: var(--green-400);
+  background: var(--green-50);
+}
+
+.data-action-card.danger:hover {
+  border-color: var(--red-400);
+  background: var(--red-50);
+}
+
+.data-action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.data-action-icon.green { background: var(--green-50); color: var(--green-600); }
+.data-action-icon.blue { background: var(--blue-50); color: var(--blue-600); }
+.data-action-icon.red { background: var(--red-50); color: var(--red-600); }
+
+.data-action-card strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.data-action-card span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* App Info Grid */
+.app-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.app-info-item {
+  padding: 14px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.app-info-item span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.app-info-item strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Responsive Settings */
+@media (max-width: 768px) {
+  .settings-layout {
+    padding: 16px;
+  }
+  .data-actions {
+    grid-template-columns: 1fr;
+  }
+  .app-info-grid {
     grid-template-columns: 1fr;
   }
 }

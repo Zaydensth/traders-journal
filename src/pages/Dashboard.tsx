@@ -342,25 +342,50 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-        </div>
 
-        {/* ===== DISCIPLINE SCORE WIDGET (floating) ===== */}
-        <div style={{ position: 'fixed', bottom: 24, left: 24, zIndex: 90 }}>
-          <div className="sidebar-widget" style={{ background: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', borderRadius: 16, width: 140 }}>
-            <div className="sidebar-widget-title">Discipline Score</div>
-            <div className="discipline-circle">
-              <svg viewBox="0 0 100 100">
-                <circle className="bg" cx="50" cy="50" r="42" />
-                <circle
-                  className="progress"
-                  cx="50" cy="50" r="42"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={disciplineOffset}
-                />
-              </svg>
-              <div className="discipline-value">
-                <div className="number">{disciplineScore}</div>
-                <div className="total">/ 100</div>
+          {/* ===== DISCIPLINE SCORE CARD ===== */}
+          <div className="card animate-in">
+            <div className="card-header">
+              <div className="card-title">
+                <CheckCircle2 size={18} color="var(--teal-500)" />
+                Discipline Score
+              </div>
+            </div>
+            <div className="discipline-widget">
+              <div className="discipline-circle" style={{ width: 130, height: 130, margin: '0 auto 12px' }}>
+                <svg viewBox="0 0 100 100" style={{ width: 130, height: 130 }}>
+                  <circle className="bg" cx="50" cy="50" r="42" />
+                  <circle
+                    className="progress"
+                    cx="50" cy="50" r="42"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={disciplineOffset}
+                  />
+                </svg>
+                <div className="discipline-value">
+                  <div className="number" style={{ fontSize: '2.2rem' }}>{disciplineScore}</div>
+                  <div className="total">/ 100</div>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 8 }}>
+                {disciplineScore >= 90 ? '🔥 Excellent discipline! Keep it up.' :
+                 disciplineScore >= 70 ? '💪 Good discipline. Room for improvement.' :
+                 disciplineScore >= 50 ? '⚠️ Moderate. Watch your mistakes.' :
+                 '🚨 Needs attention. Review your trading habits.'}
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 16 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>MISTAKE-FREE</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--green-600)' }}>
+                    {trades.filter(t => !t.mistake || t.mistake === '' || t.mistake === 'None').length}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>WITH MISTAKES</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--red-500)' }}>
+                    {trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

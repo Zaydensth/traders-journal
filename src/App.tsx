@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import AddTrade from './pages/AddTrade';
+import Settings from './pages/Settings';
 import './index.css';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
             <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon="📈" />} />
             <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
             <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
-            <Route path="/settings" element={<PlaceholderPage title="Settings" icon="⚙️" />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>
