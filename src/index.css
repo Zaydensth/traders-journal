@@ -1672,7 +1672,17 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 /* Profile dropdown */
 .profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
   min-width: 224px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease;
 }
 
 .dropdown-user-header {
