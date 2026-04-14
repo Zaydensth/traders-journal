@@ -15,7 +15,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Target, Scale, BarChart3, TrendingDown, Activity,
-  Bell, ChevronDown, Clock, Sun, Moon,
+  Bell, ChevronDown, Clock, Sun, Moon, Calendar,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw,
   Settings, LayoutDashboard
@@ -72,9 +72,13 @@ export default function Dashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
-  const [dashPeriod, setDashPeriod] = useState<TimePeriod>('This Month');
   const [edgePeriod, setEdgePeriod] = useState<TimePeriod>('This Month');
   const [heatmapPeriod, setHeatmapPeriod] = useState<TimePeriod>('This Week');
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+  });
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
 
   const chartRef = useRef<ChartJS<'line'>>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -85,12 +89,13 @@ export default function Dashboard() {
     loadSampleData();
     const data = storage.getTrades();
     setTrades(data);
-    const filtered = filterByPeriod(data, dashPeriod);
-    setStats(getTradeStats(filtered));
+    // Dashboard uses custom date range
+    const dashFiltered = data.filter(t => t.date >= dateFrom && t.date <= dateTo);
+    setStats(getTradeStats(dashFiltered));
     setEdges(getSetupEdges(filterByPeriod(data, edgePeriod)));
     setHeatmap(getMistakeHeatmap(filterByPeriod(data, heatmapPeriod)));
     setEquityCurve(getEquityCurve(data));
-  }, [dashPeriod, edgePeriod, heatmapPeriod]);
+  }, [dateFrom, dateTo, edgePeriod, heatmapPeriod]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -197,13 +202,11 @@ export default function Dashboard() {
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">
-          <div className="select-wrapper" style={{ minWidth: 0 }}>
-            <select className="header-select" value={dashPeriod} onChange={e => setDashPeriod(e.target.value as TimePeriod)}>
-              <option value="This Week">This Week</option>
-              <option value="This Month">This Month</option>
-              <option value="Last 3 Months">Last 3 Months</option>
-              <option value="All Time">All Time</option>
-            </select>
+          <div className="date-range-picker">
+            <Calendar size={15} className="date-range-icon" />
+            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="date-range-input" />
+            <span className="date-range-sep">–</span>
+            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="date-range-input" />
           </div>
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
