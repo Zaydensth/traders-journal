@@ -339,8 +339,8 @@ export default function AllTrades() {
           <div className="at-filter-header">
             <div className="at-filter-title">
               <Filter size={16} /> Filters
+              <button className="at-clear-btn" onClick={clearFilters} style={{ opacity: hasActiveFilters ? 1 : 0.4, marginLeft: 10, fontWeight: 600 }}>Clear All</button>
             </div>
-            <button className="at-clear-btn" onClick={clearFilters} style={{ opacity: hasActiveFilters ? 1 : 0.4 }}>Clear All</button>
           </div>
           <div className="at-filter-fields">
             <div className="input-with-icon" style={{ flex: '2 1 200px' }}>
