@@ -173,17 +173,23 @@ export default function EdgeBySetup() {
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <div className="header-btn icon-only"><Bell size={18} /></div>
-          <div className="profile-wrap" ref={profileRef}>
-            <button className="profile-btn" onClick={() => setShowProfile(v => !v)}>
+          <div className="dropdown-wrap" ref={profileRef}>
+            <div className="user-profile-badge" onClick={() => setShowProfile(v => !v)}>
               <div className="user-avatar">{userInitials}</div>
-              <div className="user-info"><div className="user-name">{userName}</div><div className="user-plan">Pro Plan</div></div>
-              <ChevronDown size={14} />
-            </button>
+              <div className="user-profile-info">
+                <span className="user-profile-name">{userName}</span>
+                <span className="user-profile-plan">Pro Plan</span>
+              </div>
+              <ChevronDown size={14} color="var(--text-secondary)" />
+            </div>
             {showProfile && (
-              <div className="profile-dropdown">
-                <div className="dropdown-user-row">
+              <div className="dropdown-panel profile-dropdown">
+                <div className="dropdown-user-header">
                   <div className="user-avatar" style={{ width: 38, height: 38, flexShrink: 0 }}>{userInitials}</div>
-                  <div><div className="dropdown-user-name">{userName}</div><div className="dropdown-user-plan">Pro Plan · Active</div></div>
+                  <div>
+                    <div className="dropdown-user-name">{userName}</div>
+                    <div className="dropdown-user-plan">Pro Plan · Active</div>
+                  </div>
                 </div>
                 <div className="dropdown-divider" />
                 <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/'); }}><BarChart2 size={14} /> Dashboard</button>
