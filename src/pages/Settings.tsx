@@ -57,7 +57,7 @@ export default function Settings() {
   }
 
   function handleExport() {
-    const trades = localStorage.getItem('tj_trades') || '[]';
+    const trades = localStorage.getItem('traders_journal_data') || '[]';
     const blob = new Blob([trades], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -402,7 +402,7 @@ export default function Settings() {
                 <span>Import trades from a JSON file</span>
               </div>
             </div>
-            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { localStorage.removeItem('tj_trades'); alert('All trade data has been deleted.'); window.location.reload(); }}}>
+            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { localStorage.removeItem('traders_journal_data'); localStorage.setItem('tj_data_deleted', 'true'); alert('All trade data has been deleted.'); window.location.reload(); }}}>
               <div className="data-action-icon red"><Trash2 size={22} /></div>
               <div>
                 <strong>Delete All Data</strong>

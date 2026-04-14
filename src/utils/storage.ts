@@ -10,6 +10,7 @@ export const storage = {
 
   saveTrades: (trades: Trade[]): void => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+    localStorage.removeItem('tj_data_deleted');
   },
 
   addTrade: (trade: Trade): void => {
