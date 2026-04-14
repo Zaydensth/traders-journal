@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAN4cZRbVyGza6YrUunItYdWHnqcjjeZSs",
+  apiKey: "AIzaSyAN4cZRbVyGza6YrUunitYdWHnqcjjeZSs",
   authDomain: "traders-journal-32225.firebaseapp.com",
   projectId: "traders-journal-32225",
   storageBucket: "traders-journal-32225.firebasestorage.app",
