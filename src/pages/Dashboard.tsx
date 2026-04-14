@@ -36,13 +36,18 @@ import { loadSampleData } from '../utils/sampleData';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler, Tooltip, Legend);
 
-type TimePeriod = 'This Week' | 'This Month' | 'Last 3 Months' | 'All Time';
+type TimePeriod = 'Today' | 'This Week' | 'This Month' | 'Last 3 Months' | 'Last 6 Months' | 'This Year' | 'All Time';
+
+const PERIOD_OPTIONS: TimePeriod[] = ['Today', 'This Week', 'This Month', 'Last 3 Months', 'Last 6 Months', 'This Year', 'All Time'];
 
 function filterByPeriod(allTrades: Trade[], period: TimePeriod): Trade[] {
   if (period === 'All Time') return allTrades;
   const now = new Date();
   let cutoff: Date;
   switch (period) {
+    case 'Today':
+      cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
     case 'This Week': {
       const day = now.getDay();
       cutoff = new Date(now);
@@ -55,6 +60,12 @@ function filterByPeriod(allTrades: Trade[], period: TimePeriod): Trade[] {
       break;
     case 'Last 3 Months':
       cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      break;
+    case 'Last 6 Months':
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+      break;
+    case 'This Year':
+      cutoff = new Date(now.getFullYear(), 0, 1);
       break;
     default:
       return allTrades;
@@ -76,7 +87,7 @@ export default function Dashboard() {
   const datePickerRef = useRef<HTMLDivElement>(null);
   const [edgePeriod, setEdgePeriod] = useState<TimePeriod>('This Month');
   const [heatmapPeriod, setHeatmapPeriod] = useState<TimePeriod>('This Week');
-  const [equityMode, setEquityMode] = useState<'daily' | 'weekly'>('daily');
+  const [equityPeriod, setEquityPeriod] = useState<TimePeriod>('This Month');
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
@@ -97,8 +108,8 @@ export default function Dashboard() {
     setStats(getTradeStats(dashFiltered));
     setEdges(getSetupEdges(filterByPeriod(data, edgePeriod)));
     setHeatmap(getMistakeHeatmap(filterByPeriod(data, heatmapPeriod)));
-    setEquityCurve(getEquityCurve(dashFiltered, equityMode));
-  }, [dateFrom, dateTo, edgePeriod, heatmapPeriod, equityMode]);
+    setEquityCurve(getEquityCurve(filterByPeriod(data, equityPeriod)));
+  }, [dateFrom, dateTo, edgePeriod, heatmapPeriod, equityPeriod]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -363,9 +374,8 @@ export default function Dashboard() {
                 Equity Curve
               </div>
               <div className="select-wrapper" style={{ minWidth: 0 }}>
-                <select className="header-select" value={equityMode} onChange={e => setEquityMode(e.target.value as 'daily' | 'weekly')}>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
+                <select className="header-select" value={equityPeriod} onChange={e => setEquityPeriod(e.target.value as TimePeriod)}>
+                  {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
             </div>
@@ -426,10 +436,7 @@ export default function Dashboard() {
               </div>
               <div className="select-wrapper" style={{ minWidth: 0 }}>
                 <select className="header-select" value={edgePeriod} onChange={e => setEdgePeriod(e.target.value as TimePeriod)}>
-                  <option value="This Week">This Week</option>
-                  <option value="This Month">This Month</option>
-                  <option value="Last 3 Months">Last 3 Months</option>
-                  <option value="All Time">All Time</option>
+                  {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
             </div>
@@ -483,10 +490,7 @@ export default function Dashboard() {
               </div>
               <div className="select-wrapper" style={{ minWidth: 0 }}>
                 <select className="header-select" value={heatmapPeriod} onChange={e => setHeatmapPeriod(e.target.value as TimePeriod)}>
-                  <option value="This Week">This Week</option>
-                  <option value="This Month">This Month</option>
-                  <option value="Last 3 Months">Last 3 Months</option>
-                  <option value="All Time">All Time</option>
+                  {PERIOD_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
             </div>

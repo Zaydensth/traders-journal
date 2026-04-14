@@ -93,6 +93,10 @@ export default function AllTrades() {
   /* ─── date range computation ─── */
   function getDateBounds() {
     const now = new Date();
+    if (dateRange === 'today') {
+      const t = now.toISOString().split('T')[0];
+      return { from: t, to: t };
+    }
     if (dateRange === 'week') {
       const d = new Date(now); d.setDate(d.getDate() - 7);
       return { from: d.toISOString().split('T')[0], to: '' };
@@ -103,6 +107,13 @@ export default function AllTrades() {
     if (dateRange === '3months') {
       const d = new Date(now); d.setMonth(d.getMonth() - 3);
       return { from: d.toISOString().split('T')[0], to: '' };
+    }
+    if (dateRange === '6months') {
+      const d = new Date(now); d.setMonth(d.getMonth() - 6);
+      return { from: d.toISOString().split('T')[0], to: '' };
+    }
+    if (dateRange === 'year') {
+      return { from: `${now.getFullYear()}-01-01`, to: '' };
     }
     return { from: '', to: '' };
   }
@@ -355,9 +366,12 @@ export default function AllTrades() {
                 <Calendar size={14} className="select-prefix-icon" />
                 <select value={dateRange} onChange={e => { setDateRange(e.target.value); setPage(1); }}>
                   <option value="all">All Time</option>
+                  <option value="today">Today</option>
                   <option value="week">This Week</option>
                   <option value="month">This Month</option>
                   <option value="3months">Last 3 Months</option>
+                  <option value="6months">Last 6 Months</option>
+                  <option value="year">This Year</option>
                 </select>
                 <ChevronDown size={13} className="select-icon" />
               </div>
