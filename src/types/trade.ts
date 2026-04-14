@@ -47,6 +47,18 @@ export interface SetupEdge {
   pnl: number;
 }
 
+export interface CustomSetup {
+  id: string;
+  name: string;
+  description: string;
+  entryRules: string[];
+  exitRules: string[];
+  slRules: string[];
+  timeframes: string[];
+  color: string;
+  createdAt: string;
+}
+
 export interface MistakeEntry {
   mistake: string;
   counts: number[];

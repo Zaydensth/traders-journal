@@ -205,11 +205,86 @@ export function getEquityCurve(trades: Trade[], mode: 'daily' | 'weekly' = 'dail
   return { labels, data };
 }
 
+export interface DisciplineComponent {
+  name: string;
+  score: number;
+  maxScore: number;
+  icon: string;
+  description: string;
+}
+
+export interface DisciplineBreakdown {
+  overall: number;
+  components: DisciplineComponent[];
+}
+
 export function getDisciplineScore(trades: Trade[]): number {
   if (trades.length === 0) return 0;
-  const mistakeTrades = trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length;
-  const penalty = (mistakeTrades / trades.length) * 50;
-  return Math.max(0, Math.round(100 - penalty));
+  return getDisciplineBreakdown(trades).overall;
+}
+
+export function getDisciplineBreakdown(trades: Trade[]): DisciplineBreakdown {
+  if (trades.length === 0) {
+    return {
+      overall: 0,
+      components: [
+        { name: 'Rule Following', score: 0, maxScore: 20, icon: '📏', description: 'Trades without mistakes' },
+        { name: 'Risk Management', score: 0, maxScore: 20, icon: '🛡️', description: 'Stop loss usage & R:R ratio' },
+        { name: 'Emotional Control', score: 0, maxScore: 15, icon: '🧘', description: 'Trading without FOMO/Greed' },
+        { name: 'Consistency', score: 0, maxScore: 20, icon: '📊', description: 'Regular trading routine' },
+        { name: 'Plan Adherence', score: 0, maxScore: 15, icon: '📋', description: 'Following setup rules' },
+        { name: 'Journal Quality', score: 0, maxScore: 10, icon: '📝', description: 'Detailed notes & tags' },
+      ]
+    };
+  }
+
+  // 1. Rule Following (20 pts) — trades without mistakes
+  const noMistake = trades.filter(t => !t.mistake || t.mistake === '' || t.mistake === 'None').length;
+  const ruleScore = Math.round((noMistake / trades.length) * 20);
+
+  // 2. Risk Management (20 pts) — SL defined + good R:R
+  const hasSL = trades.filter(t => t.stopLoss > 0).length;
+  const slScore = Math.round((hasSL / trades.length) * 10);
+  const rrs = trades.map(t => calcRiskReward(t)).filter(r => r > 0);
+  const avgRR = rrs.length > 0 ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0;
+  const rrScore = Math.min(10, Math.round(avgRR * 5));
+  const riskScore = slScore + rrScore;
+
+  // 3. Emotional Control (15 pts) — trades without FOMO/Greed/Revenge
+  const badEmotions = ['FOMO', 'Greed', 'Fear'];
+  const badMistakes = ['Revenge Trade', 'Overtrading'];
+  const emotionalTrades = trades.filter(t =>
+    badEmotions.includes(t.emotion) || badMistakes.includes(t.mistake)
+  ).length;
+  const emotionScore = Math.round(((trades.length - emotionalTrades) / trades.length) * 15);
+
+  // 4. Consistency (20 pts) — trading on multiple days
+  const uniqueDays = new Set(trades.map(t => t.date)).size;
+  const consistencyScore = Math.min(20, uniqueDays * 4);
+
+  // 5. Plan Adherence (15 pts) — using defined setups and timeframe
+  const hasSetup = trades.filter(t => t.setup && t.setup !== 'Custom' && t.setup !== '').length;
+  const hasTF = trades.filter(t => t.timeframe && t.timeframe !== '').length;
+  const planScore = Math.round(((hasSetup / trades.length) * 8) + ((hasTF / trades.length) * 7));
+
+  // 6. Journal Quality (10 pts) — notes, tags, screenshots
+  const hasNotes = trades.filter(t => t.notes && t.notes.trim().length > 10).length;
+  const hasTags = trades.filter(t => t.tags && t.tags.length > 0).length;
+  const journalScore = Math.round(((hasNotes / trades.length) * 5) + ((hasTags / trades.length) * 5));
+
+  const overall = ruleScore + riskScore + emotionScore + consistencyScore + planScore + journalScore;
+
+  return {
+    overall: Math.min(100, overall),
+    components: [
+      { name: 'Rule Following', score: ruleScore, maxScore: 20, icon: '📏', description: 'Trades without mistakes' },
+      { name: 'Risk Management', score: riskScore, maxScore: 20, icon: '🛡️', description: 'Stop loss usage & R:R ratio' },
+      { name: 'Emotional Control', score: emotionScore, maxScore: 15, icon: '🧘', description: 'Trading without FOMO/Greed' },
+      { name: 'Consistency', score: consistencyScore, maxScore: 20, icon: '📊', description: 'Regular trading routine' },
+      { name: 'Plan Adherence', score: planScore, maxScore: 15, icon: '📋', description: 'Following setup rules' },
+      { name: 'Journal Quality', score: journalScore, maxScore: 10, icon: '📝', description: 'Detailed notes & tags' },
+    ]
+  };
 }
 
 export function formatCurrency(amount: number, symbol = '₹'): string {

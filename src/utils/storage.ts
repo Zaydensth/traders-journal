@@ -1,4 +1,4 @@
-import type { Trade } from '../types/trade';
+import type { Trade, CustomSetup } from '../types/trade';
 
 const BASE_KEY = 'traders_journal_data';
 let _uid: string | null = null;
@@ -57,5 +57,16 @@ export const storage = {
 
   generateId: (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-  }
+  },
+
+  getCustomSetups: (): CustomSetup[] => {
+    const key = _uid ? `tj_setups_${_uid}` : 'tj_setups_none';
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveCustomSetups: (setups: CustomSetup[]): void => {
+    const key = _uid ? `tj_setups_${_uid}` : 'tj_setups_none';
+    localStorage.setItem(key, JSON.stringify(setups));
+  },
 };
