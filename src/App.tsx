@@ -1,11 +1,16 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import AddTrade from './pages/AddTrade';
+import AllTrades from './pages/AllTrades';
 import Settings from './pages/Settings';
+import { applyTheme, getTheme } from './utils/theme';
 import './index.css';
 
 function App() {
+  useEffect(() => { applyTheme(getTheme()); }, []);
+
   return (
     <BrowserRouter>
       <div className="app-layout">
@@ -14,7 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/add-trade" element={<AddTrade />} />
-            <Route path="/all-trades" element={<PlaceholderPage title="All Trades" icon="📄" />} />
+            <Route path="/all-trades" element={<AllTrades />} />
             <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon="📈" />} />
             <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
             <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
