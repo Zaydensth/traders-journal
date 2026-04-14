@@ -53,7 +53,7 @@ const defaultForm: FormData = {
 
 export default function AddTrade() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Trader';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const [form, setForm] = useState<FormData>({ ...defaultForm });
@@ -299,6 +299,9 @@ export default function AddTrade() {
                   <Settings size={14} /> Settings
                 </Link>
                 <div className="dropdown-divider" />
+                <button className="dropdown-item" onClick={() => { logout(); }} style={{ color: 'var(--red-500)' }}>
+                  <PenSquare size={14} /> Sign Out
+                </button>
                 <div className="dropdown-footer">v1.0 · Trader's Journal</div>
               </div>
             )}

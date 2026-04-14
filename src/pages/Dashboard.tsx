@@ -32,7 +32,6 @@ import {
   calcRiskReward,
   formatCurrency
 } from '../utils/calculations';
-import { loadSampleData } from '../utils/sampleData';
 import { useAuth } from '../contexts/AuthContext';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler, Tooltip, Legend);
@@ -104,7 +103,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadSampleData();
     const data = storage.getTrades();
     setTrades(data);
     // Dashboard uses custom date range

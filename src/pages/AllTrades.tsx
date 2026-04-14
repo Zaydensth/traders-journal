@@ -18,7 +18,6 @@ import {
   getTradeStats, calcPnL, calcRiskReward, calcRMultiple, formatCurrency
 } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
-import { loadSampleData } from '../utils/sampleData';
 import { useAuth } from '../contexts/AuthContext';
 
 /* ─── helpers ─── */
@@ -45,7 +44,7 @@ type SortField = 'date' | 'instrument' | 'setup' | 'direction' | 'entryPrice' | 
 
 export default function AllTrades() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Trader';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -79,7 +78,6 @@ export default function AllTrades() {
   const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadSampleData();
     const data = storage.getTrades();
     setTrades(data);
     setStats(getTradeStats(data));
@@ -330,6 +328,9 @@ export default function AllTrades() {
                   <SettingsIcon size={14} /> Settings
                 </button>
                 <div className="dropdown-divider" />
+                <button className="dropdown-item" onClick={() => { logout(); }} style={{ color: 'var(--red-500)' }}>
+                  <SlidersHorizontal size={14} /> Sign Out
+                </button>
                 <div className="dropdown-footer">v1.0 · Trader's Journal</div>
               </div>
             )}
