@@ -402,7 +402,7 @@ export default function Settings() {
                 <span>Import trades from a JSON file</span>
               </div>
             </div>
-            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data?')) { localStorage.removeItem('tj_trades'); alert('Deleted.'); }}}>
+            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { localStorage.removeItem('tj_trades'); alert('All trade data has been deleted.'); window.location.reload(); }}}>
               <div className="data-action-icon red"><Trash2 size={22} /></div>
               <div>
                 <strong>Delete All Data</strong>
