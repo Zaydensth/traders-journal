@@ -1,44 +1,82 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  FileText, Search, Filter, Download, Trash2,
-  ChevronUp, ChevronDown, Calendar, Bell,
-  Sun, Moon, Settings, LayoutDashboard,
-  ArrowUpDown, TrendingUp, TrendingDown, X,
-  PlusCircle
+  FileText, Search, Download, Trash2,
+  ChevronDown, ChevronUp, Calendar, Bell,
+  Sun, Moon, Settings as SettingsIcon, LayoutDashboard,
+  TrendingUp, TrendingDown, X, Filter,
+  Target, Scale, BarChart3, Flame,
+  Eye, Edit3, SlidersHorizontal,
+  ArrowUpDown, List, LayoutGrid
 } from 'lucide-react';
-import type { Trade } from '../types/trade';
+import { FaSackDollar } from 'react-icons/fa6';
+import type { Trade, TradeStats } from '../types/trade';
 import { SETUPS, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
-import { calcPnL, calcRiskReward, formatCurrency } from '../utils/calculations';
+import {
+  getTradeStats, calcPnL, calcRiskReward, calcRMultiple, formatCurrency
+} from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
+import { loadSampleData } from '../utils/sampleData';
+
+/* ─── helpers ─── */
+const AVATAR_COLORS = ['#4f46e5','#059669','#dc2626','#ea580c','#7c3aed','#0891b2','#be185d','#1e293b','#0d9488','#6d28d9'];
+function avatarColor(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+function MiniChart({ positive }: { positive: boolean }) {
+  const pts = positive
+    ? '0,13 4,11 8,9 12,10 16,7 20,5 24,6 28,2'
+    : '0,3 4,5 8,4 12,7 16,9 20,8 24,11 28,14';
+  return (
+    <svg width="56" height="20" viewBox="0 0 28 16" style={{ display: 'block' }}>
+      <polyline points={pts} fill="none" stroke={positive ? '#10b981' : '#ef4444'}
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 type SortField = 'date' | 'instrument' | 'setup' | 'direction' | 'entryPrice' | 'exitPrice' | 'pnl';
 
 export default function AllTrades() {
   const navigate = useNavigate();
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [stats, setStats] = useState<TradeStats | null>(null);
+
+  /* filters */
   const [search, setSearch] = useState('');
   const [filterDirection, setFilterDirection] = useState('All');
   const [filterResult, setFilterResult] = useState('All');
   const [filterSetup, setFilterSetup] = useState('All');
   const [filterAsset, setFilterAsset] = useState('All');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateRange, setDateRange] = useState('all');
+  const [showMore, setShowMore] = useState(false);
+
+  /* sort & pagination */
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortPreset, setSortPreset] = useState('latest');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(7);
+
+  /* UI */
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const [showProfile, setShowProfile] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setTrades(storage.getTrades());
+    loadSampleData();
+    const data = storage.getTrades();
+    setTrades(data);
+    setStats(getTradeStats(data));
   }, []);
 
   useEffect(() => {
@@ -50,29 +88,47 @@ export default function AllTrades() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /* ─── Filtering ─── */
+  /* ─── date range computation ─── */
+  function getDateBounds() {
+    const now = new Date();
+    if (dateRange === 'week') {
+      const d = new Date(now); d.setDate(d.getDate() - 7);
+      return { from: d.toISOString().split('T')[0], to: '' };
+    }
+    if (dateRange === 'month') {
+      return { from: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, to: '' };
+    }
+    if (dateRange === '3months') {
+      const d = new Date(now); d.setMonth(d.getMonth() - 3);
+      return { from: d.toISOString().split('T')[0], to: '' };
+    }
+    return { from: '', to: '' };
+  }
+
+  /* ─── filtering ─── */
   const filtered = useMemo(() => {
+    const bounds = getDateBounds();
     return trades.filter(t => {
       if (search) {
         const q = search.toLowerCase();
-        if (!t.instrument.toLowerCase().includes(q) && !t.setup.toLowerCase().includes(q)) return false;
+        if (!t.instrument.toLowerCase().includes(q) && !t.setup.toLowerCase().includes(q) && !t.notes.toLowerCase().includes(q)) return false;
       }
       if (filterDirection !== 'All' && t.direction !== filterDirection) return false;
       if (filterResult !== 'All' && t.result !== filterResult) return false;
       if (filterSetup !== 'All' && t.setup !== filterSetup) return false;
       if (filterAsset !== 'All' && t.assetType !== filterAsset) return false;
-      if (dateFrom && t.date < dateFrom) return false;
-      if (dateTo && t.date > dateTo) return false;
+      if (bounds.from && t.date < bounds.from) return false;
+      if (bounds.to && t.date > bounds.to) return false;
       return true;
     });
-  }, [trades, search, filterDirection, filterResult, filterSetup, filterAsset, dateFrom, dateTo]);
+  }, [trades, search, filterDirection, filterResult, filterSetup, filterAsset, dateRange]);
 
-  /* ─── Sorting ─── */
+  /* ─── sorting ─── */
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
       let va: any, vb: any;
       switch (sortField) {
-        case 'date':        va = a.date;          vb = b.date;          break;
+        case 'date':        va = a.date + a.time; vb = b.date + b.time; break;
         case 'instrument':  va = a.instrument;    vb = b.instrument;    break;
         case 'setup':       va = a.setup;         vb = b.setup;         break;
         case 'direction':   va = a.direction;     vb = b.direction;     break;
@@ -86,28 +142,36 @@ export default function AllTrades() {
     });
   }, [filtered, sortField, sortDir]);
 
-  /* ─── Pagination ─── */
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const paginated = useMemo(() => sorted.slice((page - 1) * pageSize, page * pageSize), [sorted, page, pageSize]);
 
-  /* ─── Summary stats of filtered set ─── */
   const filteredStats = useMemo(() => {
     const wins = filtered.filter(t => calcPnL(t) >= 0).length;
     const pnl  = filtered.reduce((s, t) => s + calcPnL(t), 0);
     return { wins, total: filtered.length, winRate: filtered.length ? (wins / filtered.length) * 100 : 0, pnl };
   }, [filtered]);
 
-  /* ─── Handlers ─── */
-  function handleSort(field: SortField) {
+  /* ─── handlers ─── */
+  function handleSortPreset(val: string) {
+    setSortPreset(val);
+    if (val === 'latest')    { setSortField('date'); setSortDir('desc'); }
+    else if (val === 'oldest')  { setSortField('date'); setSortDir('asc'); }
+    else if (val === 'pnl_high') { setSortField('pnl'); setSortDir('desc'); }
+    else if (val === 'pnl_low')  { setSortField('pnl'); setSortDir('asc'); }
+    setPage(1);
+  }
+
+  function handleColumnSort(field: SortField) {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortField(field); setSortDir('desc'); }
+    setSortPreset('custom');
     setPage(1);
   }
 
   function clearFilters() {
     setSearch(''); setFilterDirection('All'); setFilterResult('All');
-    setFilterSetup('All'); setFilterAsset('All'); setDateFrom(''); setDateTo('');
-    setPage(1);
+    setFilterSetup('All'); setFilterAsset('All'); setDateRange('all');
+    setShowMore(false); setPage(1);
   }
 
   function handleDelete(id: string) {
@@ -115,11 +179,13 @@ export default function AllTrades() {
     const updated = trades.filter(t => t.id !== id);
     storage.saveTrades(updated);
     setTrades(updated);
+    setStats(getTradeStats(updated));
+    setSelected(prev => { const s = new Set(prev); s.delete(id); return s; });
   }
 
   function handleExport() {
     const header = ['Date','Time','Instrument','Asset Type','Setup','Timeframe','Direction',
-                    'Entry','Exit','SL','Target','Qty','Fees','Result','P&L','R:R','Emotion','Mistake','Notes'];
+      'Entry','Exit','SL','Target','Qty','Fees','Result','P&L','R:R','Emotion','Mistake','Notes'];
     const rows = filtered.map(t => [
       t.date, t.time, t.instrument, t.assetType, t.setup, t.timeframe, t.direction,
       t.entryPrice, t.exitPrice, t.stopLoss, t.targetPrice, t.quantity, t.fees,
@@ -130,25 +196,46 @@ export default function AllTrades() {
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `trades_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `trades_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  }
+  function toggleAll() {
+    if (selected.size === paginated.length) setSelected(new Set());
+    else setSelected(new Set(paginated.map(t => t.id)));
   }
 
   const hasActiveFilters = search || filterDirection !== 'All' || filterResult !== 'All'
-    || filterSetup !== 'All' || filterAsset !== 'All' || dateFrom || dateTo;
+    || filterSetup !== 'All' || filterAsset !== 'All' || dateRange !== 'all';
 
   function SortIcon({ field }: { field: SortField }) {
-    if (sortField !== field) return <ArrowUpDown size={12} style={{ opacity: 0.35 }} />;
-    return sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
+    if (sortField !== field) return <ArrowUpDown size={11} style={{ opacity: 0.3, marginLeft: 3 }} />;
+    return sortDir === 'asc'
+      ? <ChevronUp size={11} style={{ marginLeft: 3 }} />
+      : <ChevronDown size={11} style={{ marginLeft: 3 }} />;
   }
 
-  /* ─── Pagination buttons helper ─── */
   function pageButtons() {
-    const start = Math.max(1, Math.min(totalPages - 4, page - 2));
-    return Array.from({ length: Math.min(5, totalPages) }, (_, i) => start + i);
+    const btns: number[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) btns.push(i);
+    } else {
+      btns.push(1, 2, 3);
+      if (page > 4) btns.push(-1);
+      if (page > 3 && page < totalPages - 2) btns.push(page);
+      if (page < totalPages - 3) btns.push(-2);
+      btns.push(totalPages - 1, totalPages);
+    }
+    return [...new Set(btns)].sort((a, b) => a - b);
   }
+
+  const showFrom = (page - 1) * pageSize + 1;
+  const showTo = Math.min(page * pageSize, sorted.length);
+
+  if (!stats) return null;
 
   return (
     <>
@@ -156,7 +243,7 @@ export default function AllTrades() {
       <div className="page-header">
         <div className="page-header-left">
           <h2>All Trades</h2>
-          <p>Review, filter, and manage your complete trade history.</p>
+          <p>Review and analyze every trade you've taken.</p>
         </div>
         <div className="page-header-right">
           <button className="header-btn">
@@ -169,7 +256,10 @@ export default function AllTrades() {
             })()}
             <ChevronDown size={13} />
           </button>
-
+          <button className="btn-outline-green" onClick={handleExport}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: '0.82rem' }}>
+            <Download size={14} /> Export
+          </button>
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
@@ -230,7 +320,7 @@ export default function AllTrades() {
                   <LayoutDashboard size={14} /> Dashboard
                 </button>
                 <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/settings'); }}>
-                  <Settings size={14} /> Settings
+                  <SettingsIcon size={14} /> Settings
                 </button>
                 <div className="dropdown-divider" />
                 <div className="dropdown-footer">v1.0 · Trader's Journal</div>
@@ -242,123 +332,163 @@ export default function AllTrades() {
 
       <div className="page-content">
 
-        {/* ===== MINI STATS ROW ===== */}
-        <div className="at-stats-row">
-          <div className="at-stat-item">
-            <span className="at-stat-label">Showing</span>
-            <span className="at-stat-value">{filteredStats.total} trades</span>
-          </div>
-          <div className="at-stat-sep" />
-          <div className="at-stat-item">
-            <span className="at-stat-label">Win Rate</span>
-            <span className="at-stat-value">{filteredStats.winRate.toFixed(1)}%</span>
-          </div>
-          <div className="at-stat-sep" />
-          <div className="at-stat-item">
-            <span className="at-stat-label">Net P&L</span>
-            <span className={`at-stat-value ${filteredStats.pnl >= 0 ? 'positive' : 'negative'}`}>
-              {formatCurrency(filteredStats.pnl)}
-            </span>
-          </div>
-          <div className="at-stat-sep" />
-          <div className="at-stat-item">
-            <span className="at-stat-label">Wins</span>
-            <span className="at-stat-value" style={{ color: 'var(--green-600)' }}>{filteredStats.wins}</span>
-          </div>
-          <div className="at-stat-sep" />
-          <div className="at-stat-item">
-            <span className="at-stat-label">Losses</span>
-            <span className="at-stat-value" style={{ color: 'var(--red-500)' }}>{filteredStats.total - filteredStats.wins}</span>
-          </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <Link to="/add-trade" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: '0.84rem', textDecoration: 'none', borderRadius: 'var(--radius-sm)' }}>
-              <PlusCircle size={15} /> Add Trade
-            </Link>
-          </div>
-        </div>
-
         {/* ===== FILTERS ===== */}
-        <div className="card animate-in" style={{ marginBottom: 20 }}>
-          <div className="at-filters-row">
-            {/* Search */}
-            <div className="input-with-icon" style={{ flex: '2 1 180px' }}>
-              <Search size={14} className="input-icon" />
-              <input
-                type="text"
-                placeholder="Search instrument or setup..."
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
-                style={{ paddingLeft: 32 }}
-              />
+        <div className="card at-filter-card animate-in">
+          <div className="at-filter-header">
+            <div className="at-filter-title">
+              <Filter size={16} /> Filters
             </div>
-
-            <div className="select-wrapper" style={{ flex: '1 1 120px' }}>
-              <select value={filterDirection} onChange={e => { setFilterDirection(e.target.value); setPage(1); }}>
-                <option value="All">All Directions</option>
-                <option value="Long">Long ↑</option>
-                <option value="Short">Short ↓</option>
-              </select>
-              <ChevronDown size={13} className="select-icon" />
-            </div>
-
-            <div className="select-wrapper" style={{ flex: '1 1 120px' }}>
-              <select value={filterResult} onChange={e => { setFilterResult(e.target.value); setPage(1); }}>
-                <option value="All">All Results</option>
-                <option value="Profit">Profit</option>
-                <option value="Loss">Loss</option>
-              </select>
-              <ChevronDown size={13} className="select-icon" />
-            </div>
-
-            <div className="select-wrapper" style={{ flex: '1 1 130px' }}>
-              <select value={filterSetup} onChange={e => { setFilterSetup(e.target.value); setPage(1); }}>
-                <option value="All">All Setups</option>
-                {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <ChevronDown size={13} className="select-icon" />
-            </div>
-
-            <div className="select-wrapper" style={{ flex: '1 1 120px' }}>
-              <select value={filterAsset} onChange={e => { setFilterAsset(e.target.value); setPage(1); }}>
-                <option value="All">All Assets</option>
-                {ASSET_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-              <ChevronDown size={13} className="select-icon" />
-            </div>
-
-            <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }} style={{ flex: '1 1 130px' }} />
-            <input type="date" value={dateTo}   onChange={e => { setDateTo(e.target.value);   setPage(1); }} style={{ flex: '1 1 130px' }} />
-
             {hasActiveFilters && (
-              <button className="header-btn" onClick={clearFilters} style={{ color: 'var(--red-500)', whiteSpace: 'nowrap' }}>
-                <X size={13} /> Clear
-              </button>
+              <button className="at-clear-btn" onClick={clearFilters}>Clear All</button>
             )}
           </div>
-        </div>
-
-        {/* ===== TABLE ===== */}
-        <div className="card animate-in">
-          <div className="card-header">
-            <div className="card-title">
-              <FileText size={18} color="var(--green-600)" />
-              Trade History
-              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 400, marginLeft: 4 }}>
-                ({filteredStats.total} records)
-              </span>
+          <div className="at-filter-fields">
+            <div className="input-with-icon" style={{ flex: '2 1 200px' }}>
+              <Search size={14} className="input-icon" />
+              <input type="text" placeholder="Search by symbol or note..." value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ paddingLeft: 32 }} />
             </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div className="select-wrapper" style={{ minWidth: 100 }}>
-                <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
-                  <option value={10}>10 / page</option>
-                  <option value={20}>20 / page</option>
-                  <option value={50}>50 / page</option>
+
+            <div className="at-filter-group">
+              <label className="at-filter-label">Date Range</label>
+              <div className="select-wrapper">
+                <select value={dateRange} onChange={e => { setDateRange(e.target.value); setPage(1); }}>
+                  <option value="all">All Time</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="3months">Last 3 Months</option>
                 </select>
                 <ChevronDown size={13} className="select-icon" />
               </div>
-              <button className="btn-outline-green" onClick={handleExport} style={{ padding: '7px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Download size={14} /> Export CSV
-              </button>
+            </div>
+
+            <div className="at-filter-group">
+              <label className="at-filter-label">Setup</label>
+              <div className="select-wrapper">
+                <select value={filterSetup} onChange={e => { setFilterSetup(e.target.value); setPage(1); }}>
+                  <option value="All">All Setups</option>
+                  {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <ChevronDown size={13} className="select-icon" />
+              </div>
+            </div>
+
+            <div className="at-filter-group">
+              <label className="at-filter-label">Direction</label>
+              <div className="select-wrapper">
+                <select value={filterDirection} onChange={e => { setFilterDirection(e.target.value); setPage(1); }}>
+                  <option value="All">All Directions</option>
+                  <option value="Long">Long</option>
+                  <option value="Short">Short</option>
+                </select>
+                <ChevronDown size={13} className="select-icon" />
+              </div>
+            </div>
+
+            <div className="at-filter-group">
+              <label className="at-filter-label">Result</label>
+              <div className="select-wrapper">
+                <select value={filterResult} onChange={e => { setFilterResult(e.target.value); setPage(1); }}>
+                  <option value="All">All Results</option>
+                  <option value="Profit">Profit</option>
+                  <option value="Loss">Loss</option>
+                </select>
+                <ChevronDown size={13} className="select-icon" />
+              </div>
+            </div>
+
+            <button className="header-btn at-more-btn" onClick={() => setShowMore(v => !v)}>
+              <SlidersHorizontal size={13} /> More Filters
+            </button>
+          </div>
+
+          {showMore && (
+            <div className="at-filter-fields" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border-light)' }}>
+              <div className="at-filter-group">
+                <label className="at-filter-label">Asset Type</label>
+                <div className="select-wrapper">
+                  <select value={filterAsset} onChange={e => { setFilterAsset(e.target.value); setPage(1); }}>
+                    <option value="All">All Assets</option>
+                    {ASSET_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="select-icon" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ===== STAT CARDS ===== */}
+        <div className="stat-cards" style={{ marginBottom: 24 }}>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon blue"><BarChart3 size={22} /></div>
+            <div className="stat-card-label">Total Trades</div>
+            <div className="stat-card-value">{filteredStats.total}</div>
+            <div className="stat-card-change up">of {trades.length} total</div>
+          </div>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon green"><Target size={22} /></div>
+            <div className="stat-card-label">Win Rate</div>
+            <div className="stat-card-value">{filteredStats.winRate.toFixed(1)}%</div>
+            <div className={`stat-card-change ${stats.winRateChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
+              {stats.winRateChangeVsLastWeek >= 0 ? '▲' : '▼'} {Math.abs(stats.winRateChangeVsLastWeek).toFixed(1)}% vs last month
+            </div>
+          </div>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon green"><FaSackDollar size={22} /></div>
+            <div className="stat-card-label">Total Net P&L</div>
+            <div className={`stat-card-value ${filteredStats.pnl >= 0 ? 'positive' : 'negative'}`}>
+              {formatCurrency(filteredStats.pnl)}
+            </div>
+            <div className={`stat-card-change ${stats.pnlChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
+              {stats.pnlChangeVsLastWeek >= 0 ? '▲' : '▼'} {Math.abs(stats.pnlChangeVsLastWeek).toFixed(1)}% vs last month
+            </div>
+          </div>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon purple"><Scale size={22} /></div>
+            <div className="stat-card-label">Avg Risk : Reward</div>
+            <div className="stat-card-value">1 : {stats.avgRiskReward.toFixed(2)}</div>
+            <div className={`stat-card-change ${stats.rrChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
+              {stats.rrChangeVsLastWeek >= 0 ? '▲' : '▼'} {Math.abs(stats.rrChangeVsLastWeek).toFixed(2)} vs last month
+            </div>
+          </div>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon orange"><TrendingUp size={22} /></div>
+            <div className="stat-card-label">Best Day</div>
+            <div className="stat-card-value" style={{ fontSize: '0.95rem' }}>
+              {new Date(stats.bestDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+            <div className="stat-card-change up">{formatCurrency(stats.bestDay.pnl)}</div>
+          </div>
+          <div className="stat-card animate-in">
+            <div className="stat-card-icon red"><Flame size={22} /></div>
+            <div className="stat-card-label">Losing Streak</div>
+            <div className="stat-card-value">{stats.losingStreak.count} Trades</div>
+            <div className="stat-card-change">{stats.losingStreak.period}</div>
+          </div>
+        </div>
+
+        {/* ===== TABLE CARD ===== */}
+        <div className="card animate-in">
+          <div className="at-table-header">
+            <div className="card-title">
+              Trades <span className="at-table-count">({filteredStats.total})</span>
+            </div>
+            <div className="at-table-controls">
+              <div className="select-wrapper" style={{ minWidth: 140 }}>
+                <select value={sortPreset} onChange={e => handleSortPreset(e.target.value)}>
+                  <option value="latest">Sort by: Latest First</option>
+                  <option value="oldest">Sort by: Oldest First</option>
+                  <option value="pnl_high">Sort by: P&L High→Low</option>
+                  <option value="pnl_low">Sort by: P&L Low→High</option>
+                  <option value="custom" disabled>Custom Sort</option>
+                </select>
+                <ChevronDown size={13} className="select-icon" />
+              </div>
+              <div className="at-view-toggles">
+                <button className="at-view-btn active"><List size={16} /></button>
+                <button className="at-view-btn"><LayoutGrid size={16} /></button>
+              </div>
             </div>
           </div>
 
@@ -366,57 +496,81 @@ export default function AllTrades() {
             {paginated.length === 0 ? (
               <div style={{ padding: '56px 24px', textAlign: 'center', color: 'var(--text-muted)' }}>
                 <Filter size={36} style={{ marginBottom: 14, opacity: 0.35 }} />
-                <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>No trades match your filters.</p>
+                <p style={{ fontSize: '0.9rem', fontWeight: 500, marginBottom: 12 }}>No trades match your filters.</p>
                 {hasActiveFilters && (
-                  <button className="btn-outline-green" onClick={clearFilters} style={{ marginTop: 12, fontSize: '0.82rem' }}>
-                    Clear Filters
-                  </button>
+                  <button className="btn-outline-green" onClick={clearFilters} style={{ fontSize: '0.82rem' }}>Clear Filters</button>
                 )}
               </div>
             ) : (
-              <table className="data-table">
+              <table className="data-table at-data-table">
                 <thead>
                   <tr>
-                    <th className="th-sortable" onClick={() => handleSort('date')}>Date <SortIcon field="date" /></th>
-                    <th className="th-sortable" onClick={() => handleSort('instrument')}>Instrument <SortIcon field="instrument" /></th>
-                    <th>Asset</th>
-                    <th className="th-sortable" onClick={() => handleSort('setup')}>Setup <SortIcon field="setup" /></th>
-                    <th>TF</th>
-                    <th className="th-sortable" onClick={() => handleSort('direction')}>Dir <SortIcon field="direction" /></th>
-                    <th className="th-sortable" onClick={() => handleSort('entryPrice')}>Entry <SortIcon field="entryPrice" /></th>
-                    <th className="th-sortable" onClick={() => handleSort('exitPrice')}>Exit <SortIcon field="exitPrice" /></th>
+                    <th style={{ width: 36 }}>
+                      <input type="checkbox" className="at-checkbox"
+                        checked={selected.size === paginated.length && paginated.length > 0}
+                        onChange={toggleAll} />
+                    </th>
+                    <th className="th-sortable" onClick={() => handleColumnSort('date')}>Date & Time <SortIcon field="date" /></th>
+                    <th className="th-sortable" onClick={() => handleColumnSort('instrument')}>Instrument <SortIcon field="instrument" /></th>
+                    <th className="th-sortable" onClick={() => handleColumnSort('setup')}>Setup <SortIcon field="setup" /></th>
+                    <th className="th-sortable" onClick={() => handleColumnSort('direction')}>Direction <SortIcon field="direction" /></th>
+                    <th>Entry &rarr; Exit</th>
                     <th>R:R</th>
-                    <th className="th-sortable" onClick={() => handleSort('pnl')}>P&L <SortIcon field="pnl" /></th>
+                    <th className="th-sortable" onClick={() => handleColumnSort('pnl')}>Result <SortIcon field="pnl" /></th>
                     <th>Mistake</th>
-                    <th>Action</th>
+                    <th>Chart</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginated.map(trade => {
                     const pnl = calcPnL(trade);
                     const rr  = calcRiskReward(trade);
+                    const rm  = calcRMultiple(trade);
+                    const color = avatarColor(trade.instrument);
                     return (
-                      <tr key={trade.id}>
-                        <td style={{ color: 'var(--text-secondary)', fontSize: '0.79rem', whiteSpace: 'nowrap' }}>
-                          {new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <tr key={trade.id} className={selected.has(trade.id) ? 'row-selected' : ''}>
+                        <td>
+                          <input type="checkbox" className="at-checkbox"
+                            checked={selected.has(trade.id)} onChange={() => toggleSelect(trade.id)} />
                         </td>
-                        <td style={{ fontWeight: 600 }}>{trade.instrument}</td>
-                        <td><span className="badge teal">{trade.assetType}</span></td>
+                        <td className="td-date">
+                          <div>{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                          <div className="td-time">{trade.time || '—'}</div>
+                        </td>
+                        <td>
+                          <div className="instrument-cell">
+                            <div className="instrument-avatar" style={{ background: color }}>
+                              {trade.instrument.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="instrument-name">{trade.instrument}</div>
+                              <div className="instrument-type">{trade.assetType}</div>
+                            </div>
+                          </div>
+                        </td>
                         <td><span className="badge teal">{trade.setup}</span></td>
-                        <td style={{ fontSize: '0.77rem', color: 'var(--text-secondary)' }}>{trade.timeframe}</td>
                         <td>
                           <span className={`direction-badge ${trade.direction.toLowerCase()}`}>
                             {trade.direction === 'Long' ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
                             {trade.direction}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.82rem' }}>₹{trade.entryPrice.toLocaleString()}</td>
-                        <td style={{ fontSize: '0.82rem' }}>₹{trade.exitPrice.toLocaleString()}</td>
-                        <td style={{ fontSize: '0.82rem' }}>1:{rr.toFixed(1)}</td>
+                        <td className="td-entry-exit">
+                          <span>{trade.entryPrice.toLocaleString()}</span>
+                          <span className="entry-arrow">&rarr;</span>
+                          <span>{trade.exitPrice.toLocaleString()}</span>
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>1 : {rr.toFixed(1)}</td>
                         <td>
-                          <span className={pnl >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 700 }}>
-                            {formatCurrency(pnl)}
-                          </span>
+                          <div className="result-cell">
+                            <span className={pnl >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 700 }}>
+                              {formatCurrency(pnl)}
+                            </span>
+                            <span className={`result-rmultiple ${rm >= 0 ? 'positive' : 'negative'}`}>
+                              {rm >= 0 ? '+' : ''}{rm.toFixed(2)}R
+                            </span>
+                          </div>
                         </td>
                         <td>
                           {trade.mistake
@@ -424,9 +578,16 @@ export default function AllTrades() {
                             : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                         </td>
                         <td>
-                          <button className="icon-btn-danger" onClick={() => handleDelete(trade.id)} title="Delete trade">
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="chart-thumb">
+                            <MiniChart positive={pnl >= 0} />
+                          </div>
+                        </td>
+                        <td>
+                          <div className="at-action-btns">
+                            <button className="at-action-btn" title="View"><Eye size={14} /></button>
+                            <button className="at-action-btn" title="Edit"><Edit3 size={14} /></button>
+                            <button className="at-action-btn danger" title="Delete" onClick={() => handleDelete(trade.id)}><Trash2 size={14} /></button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -437,22 +598,21 @@ export default function AllTrades() {
           </div>
 
           {/* ─── Pagination ─── */}
-          {totalPages > 1 && (
+          {sorted.length > 0 && (
             <div className="at-pagination">
-              <span className="at-page-info">Page {page} of {totalPages} · {filteredStats.total} trades</span>
+              <span className="at-page-info">Showing {showFrom} to {showTo} of {sorted.length} trades</span>
               <div className="at-page-btns">
-                <button className="at-page-btn" disabled={page === 1} onClick={() => setPage(1)}>«</button>
-                <button className="at-page-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹</button>
-                {pageButtons().map(p => (
-                  <button key={p} className={`at-page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
-                ))}
-                <button className="at-page-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>›</button>
-                <button className="at-page-btn" disabled={page === totalPages} onClick={() => setPage(totalPages)}>»</button>
+                <button className="at-page-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>&lt;</button>
+                {pageButtons().map((p, i) =>
+                  p < 0 ? <span key={`gap${i}`} className="at-page-gap">...</span> : (
+                    <button key={p} className={`at-page-btn ${page === p ? 'active' : ''}`} onClick={() => setPage(p)}>{p}</button>
+                  )
+                )}
+                <button className="at-page-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>&gt;</button>
               </div>
             </div>
           )}
         </div>
-
       </div>
     </>
   );
