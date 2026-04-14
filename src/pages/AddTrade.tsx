@@ -4,7 +4,8 @@ import {
   TrendingUp, TrendingDown,
   Calendar, Clock, Tag, Search,
   ChevronDown, X, CheckCircle2, Upload, Image,
-  Bell, Sun, Moon, Zap, Settings, LayoutDashboard
+  Bell, Sun, Moon, Zap, Settings, LayoutDashboard,
+  PenSquare, BarChart3, Layers, Timer
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
 import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
@@ -311,6 +312,20 @@ export default function AddTrade() {
         {/* ===== LEFT: FORM ===== */}
         <div className="add-trade-form">
 
+          {/* ── Trade Details Header ── */}
+          <div className="card trade-details-header animate-in">
+            <div className="td-header-row">
+              <div className="td-header-icon-wrap">
+                <PenSquare size={22} />
+              </div>
+              <div className="td-header-text">
+                <h3>Trade Details</h3>
+                <p>Enter the details of your trade</p>
+              </div>
+              <span className="td-required-legend"><span className="red-star">*</span> Required fields</span>
+            </div>
+          </div>
+
           {/* ── SECTION 1: Instrument & Setup ── */}
           <div className="card form-section animate-in">
             <div className="form-section-header">
@@ -318,13 +333,12 @@ export default function AddTrade() {
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0 }}>Instrument & Setup</h3>
               </div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--red-500)', fontWeight: 500 }}>* Required fields</span>
             </div>
 
             <div className="form-grid-3">
               {/* Symbol / Instrument */}
               <div className={`form-group ${errors.instrument ? 'has-error' : ''}`}>
-                <label>Symbol / Instrument *</label>
+                <label>Symbol / Instrument <span className="red-star">*</span></label>
                 <div className="input-with-icon">
                   <Search size={14} className="input-icon" />
                   <input
@@ -340,8 +354,9 @@ export default function AddTrade() {
 
               {/* Asset Type */}
               <div className="form-group">
-                <label>Asset Type *</label>
-                <div className="select-wrapper">
+                <label>Asset Type <span className="red-star">*</span></label>
+                <div className="select-wrapper has-prefix-icon">
+                  <BarChart3 size={14} className="select-prefix-icon" />
                   <select value={form.assetType} onChange={e => updateField('assetType', e.target.value as Trade['assetType'])}>
                     {ASSET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -351,10 +366,16 @@ export default function AddTrade() {
 
               {/* Date & Time */}
               <div className="form-group">
-                <label>Date & Time *</label>
+                <label>Date & Time <span className="red-star">*</span></label>
                 <div className="date-time-row">
-                  <input type="date" value={form.date} onChange={e => updateField('date', e.target.value)} />
-                  <input type="time" value={form.time} onChange={e => updateField('time', e.target.value)} />
+                  <div className="input-with-icon" style={{ flex: 1 }}>
+                    <Calendar size={14} className="input-icon" />
+                    <input type="date" value={form.date} onChange={e => updateField('date', e.target.value)} style={{ paddingLeft: 32 }} />
+                  </div>
+                  <div className="input-with-icon" style={{ flex: 1 }}>
+                    <Clock size={14} className="input-icon" />
+                    <input type="time" value={form.time} onChange={e => updateField('time', e.target.value)} step="60" style={{ paddingLeft: 32 }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -362,8 +383,9 @@ export default function AddTrade() {
             <div className="form-grid-3">
               {/* Setup / Strategy */}
               <div className={`form-group ${errors.setup ? 'has-error' : ''}`}>
-                <label>Setup / Strategy *</label>
-                <div className="select-wrapper">
+                <label>Setup / Strategy <span className="red-star">*</span></label>
+                <div className="select-wrapper has-prefix-icon">
+                  <Layers size={14} className="select-prefix-icon" />
                   <select value={form.setup} onChange={e => updateField('setup', e.target.value)}>
                     <option value="">Select setup...</option>
                     {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -376,7 +398,8 @@ export default function AddTrade() {
               {/* Timeframe */}
               <div className="form-group">
                 <label>Timeframe</label>
-                <div className="select-wrapper">
+                <div className="select-wrapper has-prefix-icon">
+                  <Timer size={14} className="select-prefix-icon" />
                   <select value={form.timeframe} onChange={e => updateField('timeframe', e.target.value)}>
                     {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -386,7 +409,7 @@ export default function AddTrade() {
 
               {/* Direction */}
               <div className="form-group">
-                <label>Direction *</label>
+                <label>Direction <span className="red-star">*</span></label>
                 <div className="direction-toggle" style={{ marginBottom: 0 }}>
                   <button type="button" className={`direction-btn long ${form.direction === 'Long' ? 'active' : ''}`} onClick={() => updateField('direction', 'Long')}>
                     <TrendingUp size={15} /> Long
@@ -408,7 +431,7 @@ export default function AddTrade() {
 
             <div className="form-grid-3">
               <div className={`form-group ${errors.entryPrice ? 'has-error' : ''}`}>
-                <label>Entry Price *</label>
+                <label>Entry Price <span className="red-star">*</span></label>
                 <div className="input-with-prefix">
                   <span className="input-prefix">₹</span>
                   <input type="number" step="any" placeholder="0.00" value={form.entryPrice || ''} onChange={e => updateField('entryPrice', parseFloat(e.target.value) || 0)} />
@@ -417,7 +440,7 @@ export default function AddTrade() {
               </div>
 
               <div className="form-group">
-                <label>Stop Loss *</label>
+                <label>Stop Loss <span className="red-star">*</span></label>
                 <div className="input-with-prefix">
                   <span className="input-prefix">₹</span>
                   <input type="number" step="any" placeholder="0.00" value={form.stopLoss || ''} onChange={e => updateField('stopLoss', parseFloat(e.target.value) || 0)} />
@@ -435,7 +458,7 @@ export default function AddTrade() {
 
             <div className="form-grid-3">
               <div className={`form-group ${errors.quantity ? 'has-error' : ''}`}>
-                <label>Quantity / Lots *</label>
+                <label>Quantity / Lots <span className="red-star">*</span></label>
                 <div className="input-with-prefix">
                   <span className="input-prefix">₹</span>
                   <input type="number" step="any" placeholder="0" value={form.quantity || ''} onChange={e => updateField('quantity', parseFloat(e.target.value) || 0)} />
@@ -477,7 +500,7 @@ export default function AddTrade() {
 
             <div className="form-grid-3">
               <div className={`form-group ${errors.exitPrice ? 'has-error' : ''}`}>
-                <label>Exit Price *</label>
+                <label>Exit Price <span className="red-star">*</span></label>
                 <div className="input-with-prefix">
                   <span className="input-prefix">₹</span>
                   <input type="number" step="any" placeholder="0.00" value={form.exitPrice || ''} onChange={e => updateField('exitPrice', parseFloat(e.target.value) || 0)} />
@@ -492,7 +515,7 @@ export default function AddTrade() {
 
               {/* Result — auto computed */}
               <div className="form-group">
-                <label>Result *</label>
+                <label>Result <span className="red-star">*</span></label>
                 <div className="direction-toggle" style={{ marginBottom: 0 }}>
                   <button type="button" className={`direction-btn long ${form.exitPrice > 0 && livePnL >= 0 ? 'active' : ''}`} disabled={form.exitPrice <= 0}>
                     <TrendingUp size={15} /> Profit

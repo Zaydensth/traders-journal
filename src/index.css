@@ -992,6 +992,63 @@ input, select, textarea { font-family: inherit; outline: none; }
   font-weight: 600;
 }
 
+/* ─── Trade Details Header ─── */
+.trade-details-header {
+  padding: 20px 24px;
+}
+
+.td-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.td-header-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--purple-50);
+  color: var(--purple-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.td-header-text {
+  flex: 1;
+}
+
+.td-header-text h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.td-header-text p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.td-required-legend {
+  font-size: 0.78rem;
+  color: var(--red-500);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Red asterisk for required fields */
+.red-star {
+  color: var(--red-500);
+  font-weight: 700;
+}
+
+/* Rounded tags input */
+.form-section input[type="text"][placeholder*="tag"] {
+  border-radius: var(--radius-md);
+}
+
 .form-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
