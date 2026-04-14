@@ -1033,7 +1033,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 .form-group textarea {
   padding: 10px 14px;
   border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   background: var(--bg-input);
   color: var(--text-primary);
@@ -2369,7 +2369,7 @@ input, select, textarea { font-family: inherit; outline: none; }
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   color: var(--text-primary);
 }
 
@@ -2489,7 +2489,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 .at-view-toggles {
   display: flex;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -2626,6 +2626,69 @@ input, select, textarea { font-family: inherit; outline: none; }
 /* Compact data table for All Trades */
 .at-data-table th { font-size: 0.76rem; padding: 10px 12px; }
 .at-data-table td { padding: 12px; }
+
+/* Sort dropdown in table header */
+.at-table-controls .select-wrapper select {
+  border-radius: var(--radius-md);
+  padding: 8px 32px 8px 14px;
+  font-size: 0.85rem;
+  height: 38px;
+}
+
+/* ─── Grid View ─── */
+.at-grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.at-grid-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.at-grid-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.at-grid-card-body {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.at-grid-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.at-grid-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.at-grid-val {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.at-grid-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-card-hover);
+}
 
 /* Pagination */
 .at-pagination {

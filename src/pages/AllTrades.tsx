@@ -69,6 +69,7 @@ export default function AllTrades() {
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -491,8 +492,8 @@ export default function AllTrades() {
                 <ChevronDown size={13} className="select-icon" />
               </div>
               <div className="at-view-toggles">
-                <button className="at-view-btn active"><List size={16} /></button>
-                <button className="at-view-btn"><LayoutGrid size={16} /></button>
+                <button className={`at-view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><List size={16} /></button>
+                <button className={`at-view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid size={16} /></button>
               </div>
             </div>
           </div>
@@ -506,7 +507,7 @@ export default function AllTrades() {
                   <button className="btn-outline-green" onClick={clearFilters} style={{ fontSize: '0.82rem' }}>Clear Filters</button>
                 )}
               </div>
-            ) : (
+            ) : viewMode === 'list' ? (
               <table className="data-table at-data-table">
                 <thead>
                   <tr>
@@ -599,6 +600,68 @@ export default function AllTrades() {
                   })}
                 </tbody>
               </table>
+            ) : (
+              /* ─── Grid View ─── */
+              <div className="at-grid-view">
+                {paginated.map(trade => {
+                  const pnl = calcPnL(trade);
+                  const rr = calcRiskReward(trade);
+                  const color = avatarColor(trade.instrument);
+                  return (
+                    <div key={trade.id} className="at-grid-card card">
+                      <div className="at-grid-card-header">
+                        <div className="instrument-cell">
+                          <div className="instrument-avatar" style={{ background: color }}>{trade.instrument.charAt(0)}</div>
+                          <div>
+                            <div className="instrument-name">{trade.instrument}</div>
+                            <div className="instrument-type">{trade.assetType}</div>
+                          </div>
+                        </div>
+                        <span className={`direction-badge ${trade.direction.toLowerCase()}`}>
+                          {trade.direction === 'Long' ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                          {trade.direction}
+                        </span>
+                      </div>
+                      <div className="at-grid-card-body">
+                        <div className="at-grid-row">
+                          <span className="at-grid-label">Date</span>
+                          <span className="at-grid-val">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                        <div className="at-grid-row">
+                          <span className="at-grid-label">Setup</span>
+                          <span className="badge teal">{trade.setup}</span>
+                        </div>
+                        <div className="at-grid-row">
+                          <span className="at-grid-label">Entry &rarr; Exit</span>
+                          <span className="at-grid-val">{trade.entryPrice.toLocaleString()} &rarr; {trade.exitPrice.toLocaleString()}</span>
+                        </div>
+                        <div className="at-grid-row">
+                          <span className="at-grid-label">R:R</span>
+                          <span className="at-grid-val">1 : {rr.toFixed(1)}</span>
+                        </div>
+                        <div className="at-grid-row">
+                          <span className="at-grid-label">P&L</span>
+                          <span className={`at-grid-val ${pnl >= 0 ? 'positive' : 'negative'}`} style={{ fontWeight: 700 }}>{formatCurrency(pnl)}</span>
+                        </div>
+                        {trade.mistake && (
+                          <div className="at-grid-row">
+                            <span className="at-grid-label">Mistake</span>
+                            <span className="badge orange">{trade.mistake}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="at-grid-card-footer">
+                        <MiniChart positive={pnl >= 0} />
+                        <div className="at-action-btns">
+                          <button className="at-action-btn" title="View"><Eye size={14} /></button>
+                          <button className="at-action-btn" title="Edit"><Edit3 size={14} /></button>
+                          <button className="at-action-btn danger" title="Delete" onClick={() => handleDelete(trade.id)}><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
