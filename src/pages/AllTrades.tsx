@@ -259,16 +259,6 @@ export default function AllTrades() {
           <p>Review and analyze every trade you've taken.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn">
-            <Calendar size={15} />
-            {(() => {
-              const today = new Date();
-              const ms = new Date(today.getFullYear(), today.getMonth(), 1);
-              const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              return `${fmt(ms)} – ${fmt(today)}, ${today.getFullYear()}`;
-            })()}
-            <ChevronDown size={13} />
-          </button>
           <button className="btn-outline-green" onClick={handleExport}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: '0.82rem' }}>
             <Download size={14} /> Export

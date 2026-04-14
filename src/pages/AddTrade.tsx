@@ -232,11 +232,6 @@ export default function AddTrade() {
           <p>Record every trade and improve with detailed journaling.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn">
-            <Calendar size={15} />
-            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            <ChevronDown size={13} />
-          </button>
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
