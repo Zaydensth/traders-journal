@@ -228,61 +228,79 @@ export function getDisciplineBreakdown(trades: Trade[]): DisciplineBreakdown {
     return {
       overall: 0,
       components: [
-        { name: 'Rule Following', score: 0, maxScore: 20, icon: '📏', description: 'Trades without mistakes' },
-        { name: 'Risk Management', score: 0, maxScore: 20, icon: '🛡️', description: 'Stop loss usage & R:R ratio' },
-        { name: 'Emotional Control', score: 0, maxScore: 15, icon: '🧘', description: 'Trading without FOMO/Greed' },
-        { name: 'Consistency', score: 0, maxScore: 20, icon: '📊', description: 'Regular trading routine' },
-        { name: 'Plan Adherence', score: 0, maxScore: 15, icon: '📋', description: 'Following setup rules' },
-        { name: 'Journal Quality', score: 0, maxScore: 10, icon: '📝', description: 'Detailed notes & tags' },
+        { name: 'Trade Plan Adherence', score: 0, maxScore: 30, icon: '📋', description: 'Setup, SL, and exit rules followed' },
+        { name: 'Patience & Timing', score: 0, maxScore: 20, icon: '⏱️', description: 'No early entries or overtrading' },
+        { name: 'Risk Management', score: 0, maxScore: 20, icon: '🛡️', description: 'Fixed risk & no revenge trading' },
+        { name: 'Emotional Control', score: 0, maxScore: 15, icon: '🧘', description: 'Calm execution, no FOMO/panic' },
+        { name: 'Journaling & Review', score: 0, maxScore: 10, icon: '📒', description: 'Journal filled & mistakes identified' },
+        { name: 'Consistency Bonus', score: 0, maxScore: 5, icon: '🔁', description: 'Rules followed across all trades' },
       ]
     };
   }
 
-  // 1. Rule Following (20 pts) — trades without mistakes
-  const noMistake = trades.filter(t => !t.mistake || t.mistake === '' || t.mistake === 'None').length;
-  const ruleScore = Math.round((noMistake / trades.length) * 20);
-
-  // 2. Risk Management (20 pts) — SL defined + good R:R
+  // 1. Trade Plan Adherence (30 pts)
+  //    Entry on valid setup → +10, SL respected → +10, Target/exit rules followed → +10
+  const hasValidSetup = trades.filter(t => t.setup && t.setup !== '' && t.setup !== 'Custom').length;
+  const entryScore = Math.round((hasValidSetup / trades.length) * 10);
   const hasSL = trades.filter(t => t.stopLoss > 0).length;
-  const slScore = Math.round((hasSL / trades.length) * 10);
+  const slRespected = Math.round((hasSL / trades.length) * 10);
+  const hasTarget = trades.filter(t => t.targetPrice > 0).length;
+  const targetScore = Math.round((hasTarget / trades.length) * 10);
+  const planScore = entryScore + slRespected + targetScore;
+
+  // 2. Patience & Timing (20 pts)
+  //    No early entries → +10, No overtrading/impulsive → +10
+  const earlyEntries = trades.filter(t => t.mistake === 'Early Entry').length;
+  const patienceEntry = Math.max(0, 10 - (earlyEntries * 10));
+  const overtrading = trades.filter(t => t.mistake === 'Overtrading').length;
+  const patienceOvertrading = Math.max(0, 10 - (overtrading * 5));
+  const patienceScore = Math.min(20, patienceEntry + patienceOvertrading);
+
+  // 3. Risk Management (20 pts)
+  //    Fixed risk per trade followed → +10, No revenge trading → +10
   const rrs = trades.map(t => calcRiskReward(t)).filter(r => r > 0);
   const avgRR = rrs.length > 0 ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0;
-  const rrScore = Math.min(10, Math.round(avgRR * 5));
-  const riskScore = slScore + rrScore;
+  const riskFixed = Math.min(10, Math.round(avgRR * 4) + (hasSL === trades.length ? 4 : 0));
+  const revengeTrades = trades.filter(t => t.mistake === 'Revenge Trade').length;
+  const riskRevenge = Math.max(0, 10 - (revengeTrades * 10));
+  const riskScore = Math.min(20, riskFixed + riskRevenge);
 
-  // 3. Emotional Control (15 pts) — trades without FOMO/Greed/Revenge
-  const badEmotions = ['FOMO', 'Greed', 'Fear'];
-  const badMistakes = ['Revenge Trade', 'Overtrading'];
-  const emotionalTrades = trades.filter(t =>
-    badEmotions.includes(t.emotion) || badMistakes.includes(t.mistake)
-  ).length;
-  const emotionScore = Math.round(((trades.length - emotionalTrades) / trades.length) * 15);
+  // 4. Emotional Control (15 pts)
+  //    Calm execution → +5, No panic exits → +5, No FOMO → +5
+  const neutralEmotion = trades.filter(t => t.emotion === 'Neutral' || t.emotion === 'Confidence').length;
+  const calmScore = Math.round((neutralEmotion / trades.length) * 5);
+  const lateExits = trades.filter(t => t.mistake === 'Late Exit' || t.mistake === 'Moved SL').length;
+  const panicScore = Math.max(0, 5 - (lateExits * 2));
+  const fomoTrades = trades.filter(t => t.emotion === 'FOMO').length;
+  const fomoScore = Math.max(0, 5 - (fomoTrades * 5));
+  const emotionScore = Math.min(15, calmScore + panicScore + fomoScore);
 
-  // 4. Consistency (20 pts) — trading on multiple days
-  const uniqueDays = new Set(trades.map(t => t.date)).size;
-  const consistencyScore = Math.min(20, uniqueDays * 4);
-
-  // 5. Plan Adherence (15 pts) — using defined setups and timeframe
-  const hasSetup = trades.filter(t => t.setup && t.setup !== 'Custom' && t.setup !== '').length;
-  const hasTF = trades.filter(t => t.timeframe && t.timeframe !== '').length;
-  const planScore = Math.round(((hasSetup / trades.length) * 8) + ((hasTF / trades.length) * 7));
-
-  // 6. Journal Quality (10 pts) — notes, tags, screenshots
+  // 5. Journaling & Review (10 pts)
+  //    Journal filled properly → +5, Mistakes identified → +5
   const hasNotes = trades.filter(t => t.notes && t.notes.trim().length > 10).length;
-  const hasTags = trades.filter(t => t.tags && t.tags.length > 0).length;
-  const journalScore = Math.round(((hasNotes / trades.length) * 5) + ((hasTags / trades.length) * 5));
+  const journalFilled = Math.round((hasNotes / trades.length) * 5);
+  const hasMistakeLogged = trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length;
+  const noMistakeTrades = trades.filter(t => !t.mistake || t.mistake === '' || t.mistake === 'None').length;
+  // Trades that had issues AND identified them = good. Clean trades = also good.
+  const mistakeIdentified = Math.round(((hasMistakeLogged + noMistakeTrades) / trades.length) * 5);
+  const journalScore = Math.min(10, journalFilled + mistakeIdentified);
 
-  const overall = ruleScore + riskScore + emotionScore + consistencyScore + planScore + journalScore;
+  // 6. Consistency Bonus (5 pts)
+  //    All trades followed rules → +5
+  const totalMistakes = trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length;
+  const consistencyScore = totalMistakes === 0 ? 5 : Math.max(0, 5 - totalMistakes);
+
+  const overall = planScore + patienceScore + riskScore + emotionScore + journalScore + consistencyScore;
 
   return {
     overall: Math.min(100, overall),
     components: [
-      { name: 'Rule Following', score: ruleScore, maxScore: 20, icon: '📏', description: 'Trades without mistakes' },
-      { name: 'Risk Management', score: riskScore, maxScore: 20, icon: '🛡️', description: 'Stop loss usage & R:R ratio' },
-      { name: 'Emotional Control', score: emotionScore, maxScore: 15, icon: '🧘', description: 'Trading without FOMO/Greed' },
-      { name: 'Consistency', score: consistencyScore, maxScore: 20, icon: '📊', description: 'Regular trading routine' },
-      { name: 'Plan Adherence', score: planScore, maxScore: 15, icon: '📋', description: 'Following setup rules' },
-      { name: 'Journal Quality', score: journalScore, maxScore: 10, icon: '📝', description: 'Detailed notes & tags' },
+      { name: 'Trade Plan Adherence', score: planScore, maxScore: 30, icon: '📋', description: 'Setup, SL, and exit rules followed' },
+      { name: 'Patience & Timing', score: patienceScore, maxScore: 20, icon: '⏱️', description: 'No early entries or overtrading' },
+      { name: 'Risk Management', score: riskScore, maxScore: 20, icon: '🛡️', description: 'Fixed risk & no revenge trading' },
+      { name: 'Emotional Control', score: emotionScore, maxScore: 15, icon: '🧘', description: 'Calm execution, no FOMO/panic' },
+      { name: 'Journaling & Review', score: journalScore, maxScore: 10, icon: '📒', description: 'Journal filled & mistakes identified' },
+      { name: 'Consistency Bonus', score: consistencyScore, maxScore: 5, icon: '🔁', description: 'Rules followed across all trades' },
     ]
   };
 }

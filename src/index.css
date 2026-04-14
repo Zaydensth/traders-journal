@@ -1633,6 +1633,43 @@ input, select, textarea { font-family: inherit; outline: none; }
   text-align: center;
 }
 
+/* Profile button & wrap */
+.profile-wrap {
+  position: relative;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.profile-btn:hover {
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.profile-btn .user-info {
+  text-align: left;
+}
+
+.profile-btn .user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-btn .user-plan {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
 /* Profile dropdown */
 .profile-dropdown {
   min-width: 224px;
