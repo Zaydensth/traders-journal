@@ -9,7 +9,6 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { applyTheme, getTheme } from './utils/theme';
 import { storage } from './utils/storage';
-import { loadSampleData } from './utils/sampleData';
 import './index.css';
 
 function ProtectedApp() {
@@ -20,7 +19,6 @@ function ProtectedApp() {
   useEffect(() => {
     if (user) {
       storage.setUser(user.uid);
-      loadSampleData();
     }
   }, [user]);
 
