@@ -2405,6 +2405,30 @@ input, select, textarea { font-family: inherit; outline: none; }
   letter-spacing: 0.3px;
 }
 
+/* Filter dropdown prefix icons */
+.select-wrapper.has-prefix-icon {
+  position: relative;
+}
+
+.select-wrapper.has-prefix-icon select {
+  padding-left: 32px;
+}
+
+.select-prefix-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Quick stats purple icon */
+.qs-icon.purple {
+  color: #7c3aed;
+}
+
 .at-more-btn { white-space: nowrap; align-self: flex-end; }
 
 /* Table header */

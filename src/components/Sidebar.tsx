@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
   AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb,
-  Target, Scale, LayoutGrid
+  RefreshCw, ClipboardList, Layers, Star
 } from 'lucide-react';
 import { FaSackDollar } from 'react-icons/fa6';
 import { storage } from '../utils/storage';
@@ -107,12 +107,12 @@ export default function Sidebar() {
           <div className="qs-period">This Month</div>
           <div className="qs-list">
             <div className="qs-row">
-              <span className="qs-icon"><BarChart2 size={13} /></span>
+              <span className="qs-icon purple"><ClipboardList size={13} /></span>
               <span className="qs-label">Total Trades</span>
               <span className="qs-val">{quickStats.total}</span>
             </div>
             <div className="qs-row">
-              <span className="qs-icon green"><Target size={13} /></span>
+              <span className="qs-icon green"><RefreshCw size={13} /></span>
               <span className="qs-label">Win Rate</span>
               <span className="qs-val" style={{ color: 'var(--green-600)' }}>{quickStats.winRate.toFixed(1)}%</span>
             </div>
@@ -122,12 +122,12 @@ export default function Sidebar() {
               <span className={`qs-val ${quickStats.pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(quickStats.pnl)}</span>
             </div>
             <div className="qs-row">
-              <span className="qs-icon"><Scale size={13} /></span>
+              <span className="qs-icon purple"><Layers size={13} /></span>
               <span className="qs-label">Avg R:R</span>
               <span className="qs-val">1 : {quickStats.avgRR.toFixed(2)}</span>
             </div>
             <div className="qs-row">
-              <span className="qs-icon"><LayoutGrid size={13} /></span>
+              <span className="qs-icon purple"><Star size={13} /></span>
               <span className="qs-label">Best Setup</span>
               <span className="qs-val">{quickStats.bestSetup}</span>
             </div>

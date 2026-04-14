@@ -1,13 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  FileText, Search, Download, Trash2,
+  Search, Download, Trash2,
   ChevronDown, ChevronUp, Calendar, Bell,
   Sun, Moon, Settings as SettingsIcon, LayoutDashboard,
-  TrendingUp, TrendingDown, X, Filter,
-  Target, Scale, BarChart3, Flame,
+  TrendingUp, TrendingDown, Filter,
+  Target, BarChart3, Flame,
   Eye, Edit3, SlidersHorizontal,
-  ArrowUpDown, List, LayoutGrid
+  ArrowUpDown, List, LayoutGrid,
+  RefreshCw, Hexagon, Flag
 } from 'lucide-react';
 import { FaSackDollar } from 'react-icons/fa6';
 import type { Trade, TradeStats } from '../types/trade';
@@ -60,7 +61,7 @@ export default function AllTrades() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [sortPreset, setSortPreset] = useState('latest');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(7);
+  const pageSize = 7;
 
   /* UI */
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
@@ -351,7 +352,8 @@ export default function AllTrades() {
 
             <div className="at-filter-group">
               <label className="at-filter-label">Date Range</label>
-              <div className="select-wrapper">
+              <div className="select-wrapper has-prefix-icon">
+                <Calendar size={14} className="select-prefix-icon" />
                 <select value={dateRange} onChange={e => { setDateRange(e.target.value); setPage(1); }}>
                   <option value="all">All Time</option>
                   <option value="week">This Week</option>
@@ -364,7 +366,8 @@ export default function AllTrades() {
 
             <div className="at-filter-group">
               <label className="at-filter-label">Setup</label>
-              <div className="select-wrapper">
+              <div className="select-wrapper has-prefix-icon">
+                <Hexagon size={14} className="select-prefix-icon" />
                 <select value={filterSetup} onChange={e => { setFilterSetup(e.target.value); setPage(1); }}>
                   <option value="All">All Setups</option>
                   {SETUPS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -375,7 +378,8 @@ export default function AllTrades() {
 
             <div className="at-filter-group">
               <label className="at-filter-label">Direction</label>
-              <div className="select-wrapper">
+              <div className="select-wrapper has-prefix-icon">
+                <ArrowUpDown size={14} className="select-prefix-icon" />
                 <select value={filterDirection} onChange={e => { setFilterDirection(e.target.value); setPage(1); }}>
                   <option value="All">All Directions</option>
                   <option value="Long">Long</option>
@@ -387,7 +391,8 @@ export default function AllTrades() {
 
             <div className="at-filter-group">
               <label className="at-filter-label">Result</label>
-              <div className="select-wrapper">
+              <div className="select-wrapper has-prefix-icon">
+                <Flag size={14} className="select-prefix-icon" />
                 <select value={filterResult} onChange={e => { setFilterResult(e.target.value); setPage(1); }}>
                   <option value="All">All Results</option>
                   <option value="Profit">Profit</option>
@@ -427,7 +432,7 @@ export default function AllTrades() {
             <div className="stat-card-change up">of {trades.length} total</div>
           </div>
           <div className="stat-card animate-in">
-            <div className="stat-card-icon green"><Target size={22} /></div>
+            <div className="stat-card-icon green"><RefreshCw size={22} /></div>
             <div className="stat-card-label">Win Rate</div>
             <div className="stat-card-value">{filteredStats.winRate.toFixed(1)}%</div>
             <div className={`stat-card-change ${stats.winRateChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -445,7 +450,7 @@ export default function AllTrades() {
             </div>
           </div>
           <div className="stat-card animate-in">
-            <div className="stat-card-icon purple"><Scale size={22} /></div>
+            <div className="stat-card-icon green"><Target size={22} /></div>
             <div className="stat-card-label">Avg Risk : Reward</div>
             <div className="stat-card-value">1 : {stats.avgRiskReward.toFixed(2)}</div>
             <div className={`stat-card-change ${stats.rrChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -453,7 +458,7 @@ export default function AllTrades() {
             </div>
           </div>
           <div className="stat-card animate-in">
-            <div className="stat-card-icon orange"><TrendingUp size={22} /></div>
+            <div className="stat-card-icon blue"><Calendar size={22} /></div>
             <div className="stat-card-label">Best Day</div>
             <div className="stat-card-value" style={{ fontSize: '0.95rem' }}>
               {new Date(stats.bestDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
