@@ -2405,18 +2405,44 @@ input, select, textarea { font-family: inherit; outline: none; }
   letter-spacing: 0.3px;
 }
 
+/* ─── Filter card rounded inputs ─── */
+.at-filter-card input[type="text"],
+.at-filter-card select {
+  border-radius: var(--radius-full);
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  border: 1.5px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  height: 40px;
+}
+
+.at-filter-card input[type="text"]:focus,
+.at-filter-card select:focus {
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+}
+
+.at-filter-card .input-with-icon input {
+  padding-left: 36px;
+}
+
+.at-filter-card .input-with-icon .input-icon {
+  left: 14px;
+}
+
 /* Filter dropdown prefix icons */
 .select-wrapper.has-prefix-icon {
   position: relative;
 }
 
 .select-wrapper.has-prefix-icon select {
-  padding-left: 32px;
+  padding-left: 36px;
 }
 
 .select-prefix-icon {
   position: absolute;
-  left: 10px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
@@ -2429,7 +2455,13 @@ input, select, textarea { font-family: inherit; outline: none; }
   color: #7c3aed;
 }
 
-.at-more-btn { white-space: nowrap; align-self: flex-end; }
+.at-more-btn {
+  white-space: nowrap;
+  align-self: flex-end;
+  border-radius: var(--radius-full) !important;
+  padding: 10px 18px !important;
+  height: 40px;
+}
 
 /* Table header */
 .at-table-header {
