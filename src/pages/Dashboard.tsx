@@ -15,7 +15,7 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Target, Scale, BarChart3, TrendingDown, Activity,
-  Calendar, Bell, ChevronDown, Clock, Sun, Moon,
+  Bell, ChevronDown, Clock, Sun, Moon,
   Flame, CheckCircle2, LineChart, PieChart,
   ArrowRight, LayoutGrid, Rocket, RefreshCw,
   Settings, LayoutDashboard
@@ -36,6 +36,32 @@ import { loadSampleData } from '../utils/sampleData';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler, Tooltip, Legend);
 
+type TimePeriod = 'This Week' | 'This Month' | 'Last 3 Months' | 'All Time';
+
+function filterByPeriod(allTrades: Trade[], period: TimePeriod): Trade[] {
+  if (period === 'All Time') return allTrades;
+  const now = new Date();
+  let cutoff: Date;
+  switch (period) {
+    case 'This Week': {
+      const day = now.getDay();
+      cutoff = new Date(now);
+      cutoff.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+      cutoff.setHours(0, 0, 0, 0);
+      break;
+    }
+    case 'This Month':
+      cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'Last 3 Months':
+      cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      break;
+    default:
+      return allTrades;
+  }
+  return allTrades.filter(t => new Date(t.date) >= cutoff);
+}
+
 export default function Dashboard() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [stats, setStats] = useState<TradeStats | null>(null);
@@ -46,6 +72,9 @@ export default function Dashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
+  const [dashPeriod, setDashPeriod] = useState<TimePeriod>('This Month');
+  const [edgePeriod, setEdgePeriod] = useState<TimePeriod>('This Month');
+  const [heatmapPeriod, setHeatmapPeriod] = useState<TimePeriod>('This Week');
 
   const chartRef = useRef<ChartJS<'line'>>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -56,11 +85,12 @@ export default function Dashboard() {
     loadSampleData();
     const data = storage.getTrades();
     setTrades(data);
-    setStats(getTradeStats(data));
-    setEdges(getSetupEdges(data));
-    setHeatmap(getMistakeHeatmap(data));
+    const filtered = filterByPeriod(data, dashPeriod);
+    setStats(getTradeStats(filtered));
+    setEdges(getSetupEdges(filterByPeriod(data, edgePeriod)));
+    setHeatmap(getMistakeHeatmap(filterByPeriod(data, heatmapPeriod)));
     setEquityCurve(getEquityCurve(data));
-  }, []);
+  }, [dashPeriod, edgePeriod, heatmapPeriod]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -167,16 +197,14 @@ export default function Dashboard() {
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn">
-            <Calendar size={15} />
-            {(() => {
-              const today = new Date();
-              const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-              const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              return `${fmt(monthStart)} – ${fmt(today)}, ${today.getFullYear()}`;
-            })()}
-            <ChevronDown size={13} />
-          </button>
+          <div className="select-wrapper" style={{ minWidth: 0 }}>
+            <select className="header-select" value={dashPeriod} onChange={e => setDashPeriod(e.target.value as TimePeriod)}>
+              <option value="This Week">This Week</option>
+              <option value="This Month">This Month</option>
+              <option value="Last 3 Months">Last 3 Months</option>
+              <option value="All Time">All Time</option>
+            </select>
+          </div>
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
@@ -372,7 +400,14 @@ export default function Dashboard() {
                 <CheckCircle2 size={18} color="var(--green-600)" />
                 Edge by Setup
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Month <ChevronDown size={13} /></button>
+              <div className="select-wrapper" style={{ minWidth: 0 }}>
+                <select className="header-select" value={edgePeriod} onChange={e => setEdgePeriod(e.target.value as TimePeriod)}>
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                  <option value="Last 3 Months">Last 3 Months</option>
+                  <option value="All Time">All Time</option>
+                </select>
+              </div>
             </div>
             <div className="card-body-np">
               <table className="data-table">
@@ -422,7 +457,14 @@ export default function Dashboard() {
                 <Flame size={18} color="var(--orange-500)" />
                 Mistake Heatmap
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>This Week <ChevronDown size={13} /></button>
+              <div className="select-wrapper" style={{ minWidth: 0 }}>
+                <select className="header-select" value={heatmapPeriod} onChange={e => setHeatmapPeriod(e.target.value as TimePeriod)}>
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                  <option value="Last 3 Months">Last 3 Months</option>
+                  <option value="All Time">All Time</option>
+                </select>
+              </div>
             </div>
             <div className="heatmap-grid">
               <div className="heatmap-header">
