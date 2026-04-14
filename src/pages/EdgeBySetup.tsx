@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sun, Moon, Bell, ChevronDown, Plus, X, Trash2,
   TrendingUp, TrendingDown, Target, Shield, Clock,
-  BarChart2, CheckCircle2, AlertTriangle, Zap
+  BarChart2, CheckCircle2, AlertTriangle, Zap, Settings
 } from 'lucide-react';
 import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, formatCurrency, getDisciplineBreakdown } from '../utils/calculations';
@@ -193,7 +193,7 @@ export default function EdgeBySetup() {
                 </div>
                 <div className="dropdown-divider" />
                 <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/'); }}><BarChart2 size={14} /> Dashboard</button>
-                <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/settings'); }}><Shield size={14} /> Settings</button>
+                <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/settings'); }}><Settings size={14} /> Settings</button>
                 <div className="dropdown-divider" />
                 <button className="dropdown-item" onClick={() => { logout(); }} style={{ color: 'var(--red-500)' }}><X size={14} /> Sign Out</button>
                 <div className="dropdown-footer">v1.0 · Trader's Journal</div>
