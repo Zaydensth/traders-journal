@@ -16,7 +16,7 @@ import { toggleTheme, getTheme } from '../utils/theme';
 const EMOTION_OPTIONS = [
   { label: 'Neutral', emoji: '😐', color: '' },
   { label: 'Fear', emoji: '😨', color: '' },
-  { label: 'Greed', emoji: '🤑', color: 'purple' },
+  { label: 'Greed', emoji: '😈', color: 'purple' },
   { label: 'Confidence', emoji: '😎', color: '' },
   { label: 'FOMO', emoji: '😰', color: '' },
 ];
