@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown,
-  Calendar, Clock, Tag, Search,
+  Calendar, Clock, Search, Hash,
   ChevronDown, X, CheckCircle2, Upload, Image,
   Bell, Sun, Moon, Zap, Settings, LayoutDashboard,
   PenSquare, BarChart3, Layers, Timer, Eye
@@ -732,10 +732,12 @@ export default function AddTrade() {
           {/* Tags & Categories */}
           <div className="card form-section animate-in" style={{ marginTop: 16 }}>
             <div className="form-section-header" style={{ marginBottom: 12 }}>
-              <Tag size={18} color="var(--text-secondary)" />
+              <div className="td-header-icon-wrap" style={{ width: 36, height: 36 }}>
+                <Hash size={18} />
+              </div>
               <h3>Tags & Categories</h3>
             </div>
-            <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'block', marginBottom: 8 }}>Tags</label>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>Tags</label>
             {tagsList.length > 0 && (
               <div className="tags-pills-row">
                 {tagsList.map(tag => (
