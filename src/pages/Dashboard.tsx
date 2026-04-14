@@ -72,6 +72,8 @@ export default function Dashboard() {
   const [showProfile, setShowProfile] = useState(false);
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
   const [edgePeriod, setEdgePeriod] = useState<TimePeriod>('This Month');
   const [heatmapPeriod, setHeatmapPeriod] = useState<TimePeriod>('This Week');
   const [dateFrom, setDateFrom] = useState(() => {
@@ -101,6 +103,7 @@ export default function Dashboard() {
     function handleClickOutside(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) setShowDatePicker(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -202,11 +205,23 @@ export default function Dashboard() {
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">
-          <div className="date-range-picker">
-            <Calendar size={15} className="date-range-icon" />
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="date-range-input" />
-            <span className="date-range-sep">–</span>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="date-range-input" />
+          <div className="date-range-wrap" ref={datePickerRef}>
+            <button className="header-btn date-range-btn" onClick={() => setShowDatePicker(v => !v)}>
+              <Calendar size={15} />
+              {(() => {
+                const fmt = (d: string) => new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `${fmt(dateFrom)} – ${fmt(dateTo)}, ${new Date(dateTo + 'T00:00').getFullYear()}`;
+              })()}
+              <ChevronDown size={13} />
+            </button>
+            {showDatePicker && (
+              <div className="date-range-dropdown">
+                <label className="date-range-label">Start Date</label>
+                <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="date-range-input" />
+                <label className="date-range-label">End Date</label>
+                <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="date-range-input" />
+              </div>
+            )}
           </div>
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}

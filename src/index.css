@@ -302,40 +302,54 @@ input, select, textarea { font-family: inherit; outline: none; }
 }
 
 /* Date Range Picker */
-.date-range-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  border: 1px solid var(--border);
+.date-range-wrap {
+  position: relative;
 }
 
-.date-range-icon {
+.date-range-btn {
+  white-space: nowrap;
+}
+
+.date-range-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.date-range-label {
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--text-muted);
-  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .date-range-input {
-  border: none;
-  background: transparent;
-  font-size: 0.82rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-primary);
+  background: var(--bg-input);
   cursor: pointer;
-  padding: 2px 0;
-  width: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .date-range-input:focus {
   outline: none;
-}
-
-.date-range-sep {
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.85rem;
+  border-color: var(--green-400);
 }
 
 .user-avatar {
