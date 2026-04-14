@@ -5,6 +5,8 @@ import {
   Settings2, AlertTriangle, Scale, Moon
 } from 'lucide-react';
 import { toggleTheme, getTheme } from '../utils/theme';
+import { storage } from '../utils/storage';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsState {
   fullName: string;
@@ -22,9 +24,12 @@ interface SettingsState {
 }
 
 export default function Settings() {
+  const { user } = useAuth();
+  const displayName = user?.displayName || 'Trader';
+  const displayEmail = user?.email || '';
   const [settings, setSettings] = useState<SettingsState>({
-    fullName: 'Rahul Trader',
-    email: 'demotrader@email.com',
+    fullName: displayName,
+    email: displayEmail,
     phoneNumber: '+91 98765 43210',
     password: '••••••••••',
     twoFactor: true,
@@ -57,7 +62,7 @@ export default function Settings() {
   }
 
   function handleExport() {
-    const trades = localStorage.getItem('traders_journal_data') || '[]';
+    const trades = JSON.stringify(storage.getTrades());
     const blob = new Blob([trades], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -402,7 +407,7 @@ export default function Settings() {
                 <span>Import trades from a JSON file</span>
               </div>
             </div>
-            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { localStorage.removeItem('traders_journal_data'); localStorage.setItem('tj_data_deleted', 'true'); alert('All trade data has been deleted.'); window.location.reload(); }}}>
+            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { storage.deleteAllTrades(); alert('All trade data has been deleted.'); window.location.reload(); }}}>
               <div className="data-action-icon red"><Trash2 size={22} /></div>
               <div>
                 <strong>Delete All Data</strong>

@@ -127,7 +127,7 @@ const sampleTrades: Trade[] = [
 
 export function loadSampleData(): void {
   // If user intentionally deleted all data, don't re-seed
-  if (localStorage.getItem('tj_data_deleted') === 'true') return;
+  if (storage.isDataDeleted()) return;
   const existing = storage.getTrades();
   if (existing.length === 0) {
     storage.saveTrades(sampleTrades);

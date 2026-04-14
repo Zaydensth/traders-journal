@@ -12,6 +12,7 @@ import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
+import { useAuth } from '../contexts/AuthContext';
 
 const EMOTION_OPTIONS = [
   { label: 'Neutral', emoji: '😐', color: '' },
@@ -52,6 +53,9 @@ const defaultForm: FormData = {
 
 export default function AddTrade() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userName = user?.displayName || user?.email?.split('@')[0] || 'Trader';
+  const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const [form, setForm] = useState<FormData>({ ...defaultForm });
   const [submitted, setSubmitted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -271,9 +275,9 @@ export default function AddTrade() {
           {/* Profile */}
           <div className="dropdown-wrap" ref={profileRef}>
             <div className="user-profile-badge" onClick={() => { setShowProfile(v => !v); setShowBell(false); }}>
-              <div className="user-avatar">RT</div>
+              <div className="user-avatar">{userInitials}</div>
               <div className="user-profile-info">
-                <span className="user-profile-name">Rahul Trader</span>
+                <span className="user-profile-name">{userName}</span>
                 <span className="user-profile-plan">Pro Plan</span>
               </div>
               <ChevronDown size={14} color="var(--text-secondary)" />
@@ -281,9 +285,9 @@ export default function AddTrade() {
             {showProfile && (
               <div className="dropdown-panel profile-dropdown">
                 <div className="dropdown-user-header">
-                  <div className="user-avatar" style={{ width: 38, height: 38, flexShrink: 0 }}>RT</div>
+                  <div className="user-avatar" style={{ width: 38, height: 38, flexShrink: 0 }}>{userInitials}</div>
                   <div>
-                    <div className="dropdown-user-name">Rahul Trader</div>
+                    <div className="dropdown-user-name">{userName}</div>
                     <div className="dropdown-user-plan">Pro Plan · Active</div>
                   </div>
                 </div>

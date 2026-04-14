@@ -1,16 +1,29 @@
 import type { Trade } from '../types/trade';
 
-const STORAGE_KEY = 'traders_journal_data';
+const BASE_KEY = 'traders_journal_data';
+let _uid: string | null = null;
+
+function getKey(): string {
+  return _uid ? `${BASE_KEY}_${_uid}` : BASE_KEY;
+}
+
+function getDeletedKey(): string {
+  return _uid ? `tj_data_deleted_${_uid}` : 'tj_data_deleted';
+}
 
 export const storage = {
+  setUser: (uid: string | null): void => {
+    _uid = uid;
+  },
+
   getTrades: (): Trade[] => {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = localStorage.getItem(getKey());
     return data ? JSON.parse(data) : [];
   },
 
   saveTrades: (trades: Trade[]): void => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-    localStorage.removeItem('tj_data_deleted');
+    localStorage.setItem(getKey(), JSON.stringify(trades));
+    localStorage.removeItem(getDeletedKey());
   },
 
   addTrade: (trade: Trade): void => {
@@ -31,6 +44,15 @@ export const storage = {
   deleteTrade: (id: string): void => {
     const trades = storage.getTrades().filter(t => t.id !== id);
     storage.saveTrades(trades);
+  },
+
+  deleteAllTrades: (): void => {
+    localStorage.removeItem(getKey());
+    localStorage.setItem(getDeletedKey(), 'true');
+  },
+
+  isDataDeleted: (): boolean => {
+    return localStorage.getItem(getDeletedKey()) === 'true';
   },
 
   generateId: (): string => {

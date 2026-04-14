@@ -1,33 +1,62 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import AddTrade from './pages/AddTrade';
 import AllTrades from './pages/AllTrades';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { applyTheme, getTheme } from './utils/theme';
+import { storage } from './utils/storage';
+import { loadSampleData } from './utils/sampleData';
 import './index.css';
 
-function App() {
+function ProtectedApp() {
+  const { user, loading } = useAuth();
+
   useEffect(() => { applyTheme(getTheme()); }, []);
 
-  return (
-    <BrowserRouter>
-      <div className="app-layout">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/add-trade" element={<AddTrade />} />
-            <Route path="/all-trades" element={<AllTrades />} />
-            <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon="📈" />} />
-            <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
-            <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </main>
+  useEffect(() => {
+    if (user) {
+      storage.setUser(user.uid);
+      loadSampleData();
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="login-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <div className="login-brand">
+          <div className="login-logo" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <h1 style={{ fontSize: '1.4rem', color: 'var(--text-primary, #e2e8f0)' }}>Loading...</h1>
+        </div>
       </div>
-    </BrowserRouter>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/add-trade" element={<AddTrade />} />
+          <Route path="/all-trades" element={<AllTrades />} />
+          <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon="📈" />} />
+          <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
+          <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
@@ -48,6 +77,18 @@ function PlaceholderPage({ title, icon }: { title: string; icon: string }) {
         </div>
       </div>
     </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/*" element={<ProtectedApp />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
