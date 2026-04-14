@@ -2,10 +2,10 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown,
-  Calendar, Clock, Search,
+  Calendar, Clock, Tag, Search,
   ChevronDown, X, CheckCircle2, Upload, Image,
   Bell, Sun, Moon, Zap, Settings, LayoutDashboard,
-  PenSquare, BarChart3, Layers, Timer, Hash, ScanEye
+  PenSquare, BarChart3, Layers, Timer, Eye
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
 import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
@@ -14,11 +14,11 @@ import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils
 import { toggleTheme, getTheme } from '../utils/theme';
 
 const EMOTION_OPTIONS = [
-  { label: 'Neutral', emoji: '😐' },
-  { label: 'Fear', emoji: '😨' },
-  { label: 'Greed', emoji: '🤑' },
-  { label: 'Confidence', emoji: '😎' },
-  { label: 'FOMO', emoji: '😰' },
+  { label: 'Neutral', emoji: '😐', color: '' },
+  { label: 'Fear', emoji: '😨', color: '' },
+  { label: 'Greed', emoji: '🤑', color: 'purple' },
+  { label: 'Confidence', emoji: '😎', color: '' },
+  { label: 'FOMO', emoji: '😰', color: '' },
 ];
 
 const QUICK_TEMPLATES = [
@@ -30,21 +30,21 @@ type FormData = Omit<Trade, 'id' | 'result' | 'tags'> & { tags: string };
 
 const defaultForm: FormData = {
   date: new Date().toISOString().split('T')[0],
-  time: new Date().toTimeString().slice(0, 5),
+  time: '09:45',
   exitTime: '',
-  instrument: '',
-  assetType: 'Stocks',
-  setup: '',
+  instrument: 'NIFTY 50',
+  assetType: 'Index',
+  setup: 'EMA + VWAP',
   timeframe: '15 Minute',
   direction: 'Long',
-  entryPrice: 0,
-  exitPrice: 0,
-  stopLoss: 0,
-  targetPrice: 0,
-  quantity: 0,
-  fees: 0,
-  notes: '',
-  emotion: 'Neutral',
+  entryPrice: 24120,
+  exitPrice: 24450,
+  stopLoss: 24000,
+  targetPrice: 24450,
+  quantity: 50,
+  fees: 75,
+  notes: 'Clean EMA crossover above VWAP with good volume.',
+  emotion: 'Confidence',
   mistake: '',
   tags: '',
   screenshot: '',
@@ -312,10 +312,9 @@ export default function AddTrade() {
         {/* ===== LEFT: FORM ===== */}
         <div className="add-trade-form">
 
-          {/* ── SECTION 1: Trade Details + Instrument & Setup (merged) ── */}
-          <div className="card form-section animate-in">
-            {/* Trade Details sub-header */}
-            <div className="td-header-row" style={{ marginBottom: 20 }}>
+          {/* ── Trade Details Header ── */}
+          <div className="card trade-details-header animate-in">
+            <div className="td-header-row">
               <div className="td-header-icon-wrap">
                 <PenSquare size={22} />
               </div>
@@ -325,8 +324,11 @@ export default function AddTrade() {
               </div>
               <span className="td-required-legend"><span className="red-star">*</span> Required fields</span>
             </div>
+          </div>
 
-            <div className="form-section-header" style={{ marginBottom: 16, paddingTop: 16, borderTop: '1px solid var(--border-light)' }}>
+          {/* ── SECTION 1: Instrument & Setup ── */}
+          <div className="card form-section animate-in">
+            <div className="form-section-header">
               <span className="section-number">1</span>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0 }}>Instrument & Setup</h3>
@@ -374,28 +376,42 @@ export default function AddTrade() {
                     <Clock size={14} className="input-icon" />
                     <input
                       type="text"
-                      readOnly
+                      placeholder="09:45"
                       value={(() => {
                         if (!form.time) return '';
                         const [h, m] = form.time.split(':').map(Number);
-                        const period = h >= 12 ? 'PM' : 'AM';
+                        const ampm = h >= 12 ? 'PM' : 'AM';
                         const h12 = h % 12 || 12;
-                        return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${period}`;
+                        return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
                       })()}
-                      onClick={() => {
-                        const el = document.getElementById('hidden-time-input');
-                        if (el) (el as HTMLInputElement).showPicker();
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9:APMapm ]/g, '');
+                        const match = val.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                        if (match) {
+                          let h = parseInt(match[1]);
+                          const mins = match[2];
+                          const ampm = match[3].toUpperCase();
+                          if (ampm === 'PM' && h !== 12) h += 12;
+                          if (ampm === 'AM' && h === 12) h = 0;
+                          updateField('time', `${String(h).padStart(2, '0')}:${mins}`);
+                        }
                       }}
-                      placeholder="09:45 AM"
-                      style={{ paddingLeft: 32, cursor: 'pointer' }}
+                      style={{ paddingLeft: 32 }}
                     />
-                    <input
-                      id="hidden-time-input"
-                      type="time"
-                      value={form.time}
-                      onChange={e => updateField('time', e.target.value)}
-                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                    />
+                  </div>
+                  <div className="ampm-toggle">
+                    <button type="button" className={`ampm-btn ${!form.time || parseInt(form.time.split(':')[0]) < 12 ? 'active' : ''}`}
+                      onClick={() => {
+                        const [h, m] = (form.time || '09:00').split(':').map(Number);
+                        const newH = h >= 12 ? h - 12 : h;
+                        updateField('time', `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                      }}>AM</button>
+                    <button type="button" className={`ampm-btn ${form.time && parseInt(form.time.split(':')[0]) >= 12 ? 'active' : ''}`}
+                      onClick={() => {
+                        const [h, m] = (form.time || '09:00').split(':').map(Number);
+                        const newH = h < 12 ? h + 12 : h;
+                        updateField('time', `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                      }}>PM</button>
                   </div>
                 </div>
               </div>
@@ -568,15 +584,15 @@ export default function AddTrade() {
 
             <div className="form-group" style={{ marginBottom: 20 }}>
               <label>Emotions Felt</label>
-              <div className="emotion-pills">
+               <div className="emotion-pills">
                 {EMOTION_OPTIONS.map(opt => (
                   <button
                     key={opt.label}
                     type="button"
-                    className={`emotion-pill ${form.emotion === opt.label ? 'active' : ''}`}
+                    className={`emotion-pill ${form.emotion === opt.label ? 'active' : ''} ${opt.color ? `emotion-${opt.color}` : ''}`}
                     onClick={() => updateField('emotion', opt.label)}
                   >
-                    {opt.emoji} {opt.label}
+                    <span className="emotion-emoji">{opt.emoji}</span> {opt.label}
                   </button>
                 ))}
               </div>
@@ -632,7 +648,7 @@ export default function AddTrade() {
           {/* Trade Summary Preview */}
           <div className="card preview-card sticky-preview animate-in">
             <div className="form-section-header">
-              <ScanEye size={18} color="var(--text-secondary)" />
+              <Eye size={18} color="var(--green-500)" />
               <h3>Trade Summary Preview</h3>
             </div>
 
@@ -716,12 +732,10 @@ export default function AddTrade() {
           {/* Tags & Categories */}
           <div className="card form-section animate-in" style={{ marginTop: 16 }}>
             <div className="form-section-header" style={{ marginBottom: 12 }}>
-              <div className="td-header-icon-wrap" style={{ width: 36, height: 36, background: 'var(--purple-50)' }}>
-                <Hash size={18} color="var(--purple-500)" />
-              </div>
+              <Tag size={18} color="var(--text-secondary)" />
               <h3>Tags & Categories</h3>
             </div>
-            <label style={{ fontSize: '0.82rem', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>Tags</label>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'block', marginBottom: 8 }}>Tags</label>
             {tagsList.length > 0 && (
               <div className="tags-pills-row">
                 {tagsList.map(tag => (
@@ -741,7 +755,6 @@ export default function AddTrade() {
                 if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput); }
                 if (e.key === ',') { e.preventDefault(); addTag(tagInput); }
               }}
-              style={{ borderRadius: 'var(--radius-md)' }}
             />
           </div>
 

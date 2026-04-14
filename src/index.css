@@ -2264,13 +2264,13 @@ input, select, textarea { font-family: inherit; outline: none; }
 .emotion-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .emotion-pill {
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: var(--radius-full);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 500;
   border: 1.5px solid var(--border);
   background: white;
@@ -2279,7 +2279,11 @@ input, select, textarea { font-family: inherit; outline: none; }
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.emotion-emoji {
+  font-size: 1.15rem;
 }
 
 .emotion-pill:hover {
@@ -2291,6 +2295,46 @@ input, select, textarea { font-family: inherit; outline: none; }
   border-color: var(--green-500);
   color: var(--green-700);
   font-weight: 600;
+}
+
+/* Greed purple variant */
+.emotion-pill.emotion-purple:hover {
+  border-color: var(--purple-400);
+}
+
+.emotion-pill.emotion-purple.active {
+  background: var(--purple-50);
+  border-color: var(--purple-500);
+  color: var(--purple-600);
+}
+
+/* AM/PM Toggle */
+.ampm-toggle {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ampm-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ampm-btn.active {
+  background: var(--green-500);
+  color: white;
+}
+
+.ampm-btn:first-child {
+  border-right: 1px solid var(--border);
 }
 
 /* =================== MISTAKE CHECKBOX =================== */
