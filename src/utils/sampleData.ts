@@ -82,11 +82,59 @@ const sampleTrades: Trade[] = [
     notes: 'Perfect VWAP bounce after gap up.', emotion: 'Confidence',
     mistake: '', tags: ['Trend Following', 'Gap Play'], screenshot: ''
   },
+  /* ─── April 2026 trades (current month) ─── */
+  {
+    id: '11', date: '2026-04-14', time: '09:30', instrument: 'NIFTY 50',
+    assetType: 'Index', setup: 'EMA + VWAP', timeframe: '15 Minute',
+    direction: 'Long', entryPrice: 23850, exitPrice: 24120, stopLoss: 23720,
+    targetPrice: 24150, quantity: 50, fees: 75, result: 'Profit',
+    notes: 'Strong bullish momentum off morning gap.', emotion: 'Confidence',
+    mistake: '', tags: ['Trend Following', 'Gap Play'], screenshot: ''
+  },
+  {
+    id: '12', date: '2026-04-11', time: '10:15', instrument: 'RELIANCE',
+    assetType: 'Stocks', setup: 'Breakout', timeframe: '15 Minute',
+    direction: 'Long', entryPrice: 2920, exitPrice: 2985, stopLoss: 2880,
+    targetPrice: 3000, quantity: 100, fees: 50, result: 'Profit',
+    notes: 'Breakout above resistance with volume confirmation.', emotion: 'Neutral',
+    mistake: '', tags: ['Breakout', 'High Volume'], screenshot: ''
+  },
+  {
+    id: '13', date: '2026-04-09', time: '11:45', instrument: 'BANKNIFTY',
+    assetType: 'Index', setup: 'Reversal', timeframe: '30 Minute',
+    direction: 'Short', entryPrice: 53200, exitPrice: 52850, stopLoss: 53450,
+    targetPrice: 52800, quantity: 25, fees: 75, result: 'Profit',
+    notes: 'Double top at resistance zone. Clean rejection.', emotion: 'Confidence',
+    mistake: '', tags: ['Reversal', 'Double Top'], screenshot: ''
+  },
+  {
+    id: '14', date: '2026-04-07', time: '14:20', instrument: 'TATA MOTORS',
+    assetType: 'Stocks', setup: 'EMA + VWAP', timeframe: '15 Minute',
+    direction: 'Long', entryPrice: 895, exitPrice: 880, stopLoss: 875,
+    targetPrice: 920, quantity: 200, fees: 50, result: 'Loss',
+    notes: 'Late entry after EMA cross. Reversed quickly.', emotion: 'FOMO',
+    mistake: 'Late Entry', tags: [], screenshot: ''
+  },
+  {
+    id: '15', date: '2026-04-03', time: '09:55', instrument: 'HDFC BANK',
+    assetType: 'Stocks', setup: 'Breakout', timeframe: '30 Minute',
+    direction: 'Long', entryPrice: 1710, exitPrice: 1755, stopLoss: 1685,
+    targetPrice: 1760, quantity: 150, fees: 50, result: 'Profit',
+    notes: 'Gap up followed by flag breakout. Strong trend day.', emotion: 'Confidence',
+    mistake: '', tags: ['Breakout', 'Flag Pattern'], screenshot: ''
+  },
 ];
 
 export function loadSampleData(): void {
   const existing = storage.getTrades();
   if (existing.length === 0) {
     storage.saveTrades(sampleTrades);
+  } else {
+    // Merge: add any sample trades whose IDs don't already exist
+    const existingIds = new Set(existing.map(t => t.id));
+    const newTrades = sampleTrades.filter(t => !existingIds.has(t.id));
+    if (newTrades.length > 0) {
+      storage.saveTrades([...existing, ...newTrades]);
+    }
   }
 }
