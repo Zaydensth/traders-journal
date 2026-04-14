@@ -165,19 +165,43 @@ export function getMistakeHeatmap(trades: Trade[]): MistakeEntry[] {
   });
 }
 
-export function getEquityCurve(trades: Trade[]): { labels: string[]; data: number[] } {
+export function getEquityCurve(trades: Trade[], mode: 'daily' | 'weekly' = 'daily'): { labels: string[]; data: number[] } {
   const sorted = trades.slice().sort((a, b) => a.date.localeCompare(b.date));
+
+  if (mode === 'weekly') {
+    // Group by ISO week
+    const weeks = new Map<string, number>();
+    sorted.forEach(t => {
+      const d = new Date(t.date + 'T00:00');
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+      const weekStart = new Date(d.setDate(diff));
+      const key = weekStart.toISOString().split('T')[0];
+      weeks.set(key, (weeks.get(key) || 0) + calcPnL(t));
+    });
+
+    let running = 0;
+    const labels: string[] = [];
+    const data: number[] = [];
+    for (const [weekDate, pnl] of weeks) {
+      running += pnl;
+      const d = new Date(weekDate + 'T00:00');
+      labels.push(`W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString('en-US', { month: 'short' })}`);
+      data.push(running);
+    }
+    return { labels, data };
+  }
+
+  // Daily (default)
   let running = 0;
   const labels: string[] = [];
   const data: number[] = [];
-
   sorted.forEach(t => {
     running += calcPnL(t);
     const label = formatShortDate(t.date);
     labels.push(label);
     data.push(running);
   });
-
   return { labels, data };
 }
 

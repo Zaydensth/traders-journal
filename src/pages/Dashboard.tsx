@@ -76,6 +76,7 @@ export default function Dashboard() {
   const datePickerRef = useRef<HTMLDivElement>(null);
   const [edgePeriod, setEdgePeriod] = useState<TimePeriod>('This Month');
   const [heatmapPeriod, setHeatmapPeriod] = useState<TimePeriod>('This Week');
+  const [equityMode, setEquityMode] = useState<'daily' | 'weekly'>('daily');
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
@@ -96,8 +97,8 @@ export default function Dashboard() {
     setStats(getTradeStats(dashFiltered));
     setEdges(getSetupEdges(filterByPeriod(data, edgePeriod)));
     setHeatmap(getMistakeHeatmap(filterByPeriod(data, heatmapPeriod)));
-    setEquityCurve(getEquityCurve(data));
-  }, [dateFrom, dateTo, edgePeriod, heatmapPeriod]);
+    setEquityCurve(getEquityCurve(dashFiltered, equityMode));
+  }, [dateFrom, dateTo, edgePeriod, heatmapPeriod, equityMode]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -361,7 +362,12 @@ export default function Dashboard() {
                 <LineChart size={18} color="var(--green-600)" />
                 Equity Curve
               </div>
-              <button className="header-btn" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>Daily <ChevronDown size={13} /></button>
+              <div className="select-wrapper" style={{ minWidth: 0 }}>
+                <select className="header-select" value={equityMode} onChange={e => setEquityMode(e.target.value as 'daily' | 'weekly')}>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
             </div>
             <div className="chart-container">
               <Line ref={chartRef} data={equityChartData} options={equityChartOptions} />
