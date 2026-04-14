@@ -30,7 +30,7 @@ export default function Settings() {
   const [settings, setSettings] = useState<SettingsState>({
     fullName: displayName,
     email: displayEmail,
-    phoneNumber: '+91 98765 43210',
+    phoneNumber: '',
     password: '••••••••••',
     twoFactor: true,
     riskPerTrade: '1',

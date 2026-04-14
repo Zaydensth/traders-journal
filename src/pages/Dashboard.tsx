@@ -215,7 +215,7 @@ export default function Dashboard() {
             if (hr < 12) return 'Good morning';
             if (hr < 17) return 'Good afternoon';
             return 'Good evening';
-          })()}, Trader! 👋</h2>
+          })()}, {userName}! 👋</h2>
           <p>Review your trading performance and grow with discipline.</p>
         </div>
         <div className="page-header-right">

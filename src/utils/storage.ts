@@ -4,7 +4,7 @@ const BASE_KEY = 'traders_journal_data';
 let _uid: string | null = null;
 
 function getKey(): string {
-  return _uid ? `${BASE_KEY}_${_uid}` : BASE_KEY;
+  return _uid ? `${BASE_KEY}_${_uid}` : `${BASE_KEY}_none`;
 }
 
 function getDeletedKey(): string {
