@@ -23,7 +23,7 @@ interface SettingsState {
 
 export default function Settings() {
   const [settings, setSettings] = useState<SettingsState>({
-    fullName: 'Demo Trader',
+    fullName: 'Rahul Trader',
     email: 'demotrader@email.com',
     phoneNumber: '+91 98765 43210',
     password: '••••••••••',
