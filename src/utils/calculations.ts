@@ -206,7 +206,7 @@ export function getEquityCurve(trades: Trade[], mode: 'daily' | 'weekly' = 'dail
 }
 
 export function getDisciplineScore(trades: Trade[]): number {
-  if (trades.length === 0) return 100;
+  if (trades.length === 0) return 0;
   const mistakeTrades = trades.filter(t => t.mistake && t.mistake !== '' && t.mistake !== 'None').length;
   const penalty = (mistakeTrades / trades.length) * 50;
   return Math.max(0, Math.round(100 - penalty));

@@ -116,6 +116,50 @@ input, select, textarea { font-family: inherit; outline: none; }
   min-height: 100vh;
 }
 
+/* =================== SIDEBAR MOBILE TOGGLE =================== */
+.sidebar-mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 200;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 90;
+}
+
+.qs-empty {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 16px 8px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .sidebar-mobile-toggle {
+    display: flex;
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+}
+
 /* =================== SIDEBAR =================== */
 .sidebar {
   width: var(--sidebar-width);

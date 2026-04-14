@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
   AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb,
-  RefreshCw, ClipboardList, Layers, Star
+  RefreshCw, ClipboardList, Layers, Star, Menu, X
 } from 'lucide-react';
 import { FaSackDollar } from 'react-icons/fa6';
 import { storage } from '../utils/storage';
@@ -12,15 +12,20 @@ import type { Trade } from '../types/trade';
 
 export default function Sidebar() {
   const location = useLocation();
-  const [score, setScore] = useState(100);
-
+  const [score, setScore] = useState(0);
   const [trades, setTradesData] = useState<Trade[]>([]);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const data = storage.getTrades();
     setTradesData(data);
     setScore(getDisciplineScore(data));
-  }, []);
+  }, [location.pathname]); // re-read on page change
+
+  // Close mobile sidebar on nav click
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const quickStats = useMemo(() => {
     const now = new Date();
@@ -44,118 +49,145 @@ export default function Sidebar() {
     };
   }, [trades]);
 
+  const hasTrades = trades.length > 0;
   const circumference = 2 * Math.PI * 38;
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <TrendingUp size={20} color="#fff" />
-        </div>
-        <h1>
-          Trader's
-          <span>Journal</span>
-        </h1>
-      </div>
+    <>
+      {/* Mobile hamburger toggle */}
+      <button
+        className="sidebar-mobile-toggle"
+        onClick={() => setMobileOpen(v => !v)}
+        aria-label="Toggle menu"
+      >
+        {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+      </button>
 
-      <nav className="sidebar-nav">
-        <NavLink to="/" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} end>
-          <span className="sidebar-icon"><LayoutDashboard size={18} /></span>
-          Dashboard
-        </NavLink>
-        <NavLink to="/add-trade" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><PlusCircle size={18} /></span>
-          Add Trade
-        </NavLink>
-        <NavLink to="/all-trades" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><FileText size={18} /></span>
-          All Trades
-        </NavLink>
-        <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><BarChart2 size={18} /></span>
-          Analytics
-        </NavLink>
-        <NavLink to="/mistake-log" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><AlertTriangle size={18} /></span>
-          Mistake Log
-        </NavLink>
-        <NavLink to="/daily-review" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><BookOpen size={18} /></span>
-          Daily Review
-        </NavLink>
-        <NavLink to="/settings" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <span className="sidebar-icon"><Settings size={18} /></span>
-          Settings
-        </NavLink>
-      </nav>
-
-      {/* Bottom Widget — context-sensitive */}
-      {location.pathname === '/add-trade' ? (
-        <div className="sidebar-pro-tip">
-          <div className="pro-tip-header">
-            <div className="pro-tip-icon">
-              <Lightbulb size={15} />
-            </div>
-            <span className="sidebar-widget-title" style={{ margin: 0 }}>Pro Tip</span>
-          </div>
-          <p>Always define your stop loss before entering a trade. Risk only 1–2% of capital per trade.</p>
-        </div>
-      ) : location.pathname === '/all-trades' ? (
-        <div className="sidebar-quick-stats">
-          <div className="sidebar-widget-title">Quick Stats</div>
-          <div className="qs-period">This Month</div>
-          <div className="qs-list">
-            <div className="qs-row">
-              <span className="qs-icon purple"><ClipboardList size={13} /></span>
-              <span className="qs-label">Total Trades</span>
-              <span className="qs-val">{quickStats.total}</span>
-            </div>
-            <div className="qs-row">
-              <span className="qs-icon green"><RefreshCw size={13} /></span>
-              <span className="qs-label">Win Rate</span>
-              <span className="qs-val" style={{ color: 'var(--green-600)' }}>{quickStats.winRate.toFixed(1)}%</span>
-            </div>
-            <div className="qs-row">
-              <span className="qs-icon green"><FaSackDollar size={12} /></span>
-              <span className="qs-label">Net P&L</span>
-              <span className={`qs-val ${quickStats.pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(quickStats.pnl)}</span>
-            </div>
-            <div className="qs-row">
-              <span className="qs-icon purple"><Layers size={13} /></span>
-              <span className="qs-label">Avg R:R</span>
-              <span className="qs-val">1 : {quickStats.avgRR.toFixed(2)}</span>
-            </div>
-            <div className="qs-row">
-              <span className="qs-icon purple"><Star size={13} /></span>
-              <span className="qs-label">Best Setup</span>
-              <span className="qs-val">{quickStats.bestSetup}</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="sidebar-discipline">
-          <div className="sidebar-widget-title">Discipline Score</div>
-          <div className="discipline-circle">
-            <svg viewBox="0 0 100 100">
-              <circle className="bg" cx="50" cy="50" r="38" />
-              <circle
-                className="progress"
-                cx="50" cy="50" r="38"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-              />
-            </svg>
-            <div className="discipline-value">
-              <div className="number">{score}</div>
-              <div className="total">/ 100</div>
-            </div>
-          </div>
-          <div className="discipline-weekly">
-            ▲ +7 pts this week
-          </div>
-        </div>
+      {/* Overlay for mobile */}
+      {mobileOpen && (
+        <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />
       )}
-    </aside>
+
+      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">
+            <TrendingUp size={20} color="#fff" />
+          </div>
+          <h1>
+            Trader's
+            <span>Journal</span>
+          </h1>
+        </div>
+
+        <nav className="sidebar-nav">
+          <NavLink to="/" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} end>
+            <span className="sidebar-icon"><LayoutDashboard size={18} /></span>
+            Dashboard
+          </NavLink>
+          <NavLink to="/add-trade" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><PlusCircle size={18} /></span>
+            Add Trade
+          </NavLink>
+          <NavLink to="/all-trades" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><FileText size={18} /></span>
+            All Trades
+          </NavLink>
+          <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><BarChart2 size={18} /></span>
+            Analytics
+          </NavLink>
+          <NavLink to="/mistake-log" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><AlertTriangle size={18} /></span>
+            Mistake Log
+          </NavLink>
+          <NavLink to="/daily-review" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><BookOpen size={18} /></span>
+            Daily Review
+          </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><Settings size={18} /></span>
+            Settings
+          </NavLink>
+        </nav>
+
+        {/* Bottom Widget — context-sensitive */}
+        {location.pathname === '/add-trade' ? (
+          <div className="sidebar-pro-tip">
+            <div className="pro-tip-header">
+              <div className="pro-tip-icon">
+                <Lightbulb size={15} />
+              </div>
+              <span className="sidebar-widget-title" style={{ margin: 0 }}>Pro Tip</span>
+            </div>
+            <p>Always define your stop loss before entering a trade. Risk only 1–2% of capital per trade.</p>
+          </div>
+        ) : location.pathname === '/all-trades' ? (
+          <div className="sidebar-quick-stats">
+            <div className="sidebar-widget-title">Quick Stats</div>
+            <div className="qs-period">This Month</div>
+            {!hasTrades ? (
+              <div className="qs-empty">No trades yet. Add your first trade to see stats.</div>
+            ) : (
+              <div className="qs-list">
+                <div className="qs-row">
+                  <span className="qs-icon purple"><ClipboardList size={13} /></span>
+                  <span className="qs-label">Total Trades</span>
+                  <span className="qs-val">{quickStats.total}</span>
+                </div>
+                <div className="qs-row">
+                  <span className="qs-icon green"><RefreshCw size={13} /></span>
+                  <span className="qs-label">Win Rate</span>
+                  <span className="qs-val" style={{ color: 'var(--green-600)' }}>{quickStats.winRate.toFixed(1)}%</span>
+                </div>
+                <div className="qs-row">
+                  <span className="qs-icon green"><FaSackDollar size={12} /></span>
+                  <span className="qs-label">Net P&L</span>
+                  <span className={`qs-val ${quickStats.pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(quickStats.pnl)}</span>
+                </div>
+                <div className="qs-row">
+                  <span className="qs-icon purple"><Layers size={13} /></span>
+                  <span className="qs-label">Avg R:R</span>
+                  <span className="qs-val">1 : {quickStats.avgRR.toFixed(2)}</span>
+                </div>
+                <div className="qs-row">
+                  <span className="qs-icon purple"><Star size={13} /></span>
+                  <span className="qs-label">Best Setup</span>
+                  <span className="qs-val">{quickStats.bestSetup}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="sidebar-discipline">
+            <div className="sidebar-widget-title">Discipline Score</div>
+            {!hasTrades ? (
+              <div className="qs-empty">No trades yet. Start trading to see your discipline score.</div>
+            ) : (
+              <>
+                <div className="discipline-circle">
+                  <svg viewBox="0 0 100 100">
+                    <circle className="bg" cx="50" cy="50" r="38" />
+                    <circle
+                      className="progress"
+                      cx="50" cy="50" r="38"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={offset}
+                    />
+                  </svg>
+                  <div className="discipline-value">
+                    <div className="number">{score}</div>
+                    <div className="total">/ 100</div>
+                  </div>
+                </div>
+                <div className="discipline-weekly">
+                  Based on {trades.length} trade{trades.length !== 1 ? 's' : ''}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </aside>
+    </>
   );
 }
