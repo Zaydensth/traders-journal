@@ -2,10 +2,10 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown,
-  Calendar, Clock, Tag, Search,
+  Calendar, Clock, Search,
   ChevronDown, X, CheckCircle2, Upload, Image,
   Bell, Sun, Moon, Zap, Settings, LayoutDashboard,
-  PenSquare, BarChart3, Layers, Timer
+  PenSquare, BarChart3, Layers, Timer, Hash, ScanEye
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
 import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
@@ -312,9 +312,10 @@ export default function AddTrade() {
         {/* ===== LEFT: FORM ===== */}
         <div className="add-trade-form">
 
-          {/* ── Trade Details Header ── */}
-          <div className="card trade-details-header animate-in">
-            <div className="td-header-row">
+          {/* ── SECTION 1: Trade Details + Instrument & Setup (merged) ── */}
+          <div className="card form-section animate-in">
+            {/* Trade Details sub-header */}
+            <div className="td-header-row" style={{ marginBottom: 20 }}>
               <div className="td-header-icon-wrap">
                 <PenSquare size={22} />
               </div>
@@ -324,11 +325,8 @@ export default function AddTrade() {
               </div>
               <span className="td-required-legend"><span className="red-star">*</span> Required fields</span>
             </div>
-          </div>
 
-          {/* ── SECTION 1: Instrument & Setup ── */}
-          <div className="card form-section animate-in">
-            <div className="form-section-header">
+            <div className="form-section-header" style={{ marginBottom: 16, paddingTop: 16, borderTop: '1px solid var(--border-light)' }}>
               <span className="section-number">1</span>
               <div style={{ flex: 1 }}>
                 <h3 style={{ margin: 0 }}>Instrument & Setup</h3>
@@ -374,7 +372,30 @@ export default function AddTrade() {
                   </div>
                   <div className="input-with-icon" style={{ flex: 1 }}>
                     <Clock size={14} className="input-icon" />
-                    <input type="time" value={form.time} onChange={e => updateField('time', e.target.value)} step="60" style={{ paddingLeft: 32 }} />
+                    <input
+                      type="text"
+                      readOnly
+                      value={(() => {
+                        if (!form.time) return '';
+                        const [h, m] = form.time.split(':').map(Number);
+                        const period = h >= 12 ? 'PM' : 'AM';
+                        const h12 = h % 12 || 12;
+                        return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${period}`;
+                      })()}
+                      onClick={() => {
+                        const el = document.getElementById('hidden-time-input');
+                        if (el) (el as HTMLInputElement).showPicker();
+                      }}
+                      placeholder="09:45 AM"
+                      style={{ paddingLeft: 32, cursor: 'pointer' }}
+                    />
+                    <input
+                      id="hidden-time-input"
+                      type="time"
+                      value={form.time}
+                      onChange={e => updateField('time', e.target.value)}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -611,7 +632,7 @@ export default function AddTrade() {
           {/* Trade Summary Preview */}
           <div className="card preview-card sticky-preview animate-in">
             <div className="form-section-header">
-              <span style={{ fontSize: '1rem' }}>👁</span>
+              <ScanEye size={18} color="var(--text-secondary)" />
               <h3>Trade Summary Preview</h3>
             </div>
 
@@ -695,10 +716,12 @@ export default function AddTrade() {
           {/* Tags & Categories */}
           <div className="card form-section animate-in" style={{ marginTop: 16 }}>
             <div className="form-section-header" style={{ marginBottom: 12 }}>
-              <Tag size={18} color="var(--text-secondary)" />
+              <div className="td-header-icon-wrap" style={{ width: 36, height: 36, background: 'var(--purple-50)' }}>
+                <Hash size={18} color="var(--purple-500)" />
+              </div>
               <h3>Tags & Categories</h3>
             </div>
-            <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'block', marginBottom: 8 }}>Tags</label>
+            <label style={{ fontSize: '0.82rem', color: 'var(--text-primary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>Tags</label>
             {tagsList.length > 0 && (
               <div className="tags-pills-row">
                 {tagsList.map(tag => (
@@ -718,6 +741,7 @@ export default function AddTrade() {
                 if (e.key === 'Enter') { e.preventDefault(); addTag(tagInput); }
                 if (e.key === ',') { e.preventDefault(); addTag(tagInput); }
               }}
+              style={{ borderRadius: 'var(--radius-md)' }}
             />
           </div>
 
