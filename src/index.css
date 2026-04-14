@@ -1229,7 +1229,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: var(--green-500);
-  background: #fff;
+  background: var(--bg-input);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
