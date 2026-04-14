@@ -3134,6 +3134,15 @@ input, select, textarea { font-family: inherit; outline: none; }
   color: var(--text-muted, #64748b);
 }
 
+.login-input-wrap input:-webkit-autofill,
+.login-input-wrap input:-webkit-autofill:hover,
+.login-input-wrap input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--text-primary);
+}
+
 .login-eye-btn {
   background: none;
   border: none;
