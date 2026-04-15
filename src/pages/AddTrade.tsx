@@ -8,7 +8,7 @@ import {
   PenSquare, BarChart3, Layers, Timer, Eye
 } from 'lucide-react';
 import type { Trade } from '../types/trade';
-import { SETUPS, TIMEFRAMES, ASSET_TYPES } from '../types/trade';
+import { TIMEFRAMES, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
@@ -427,12 +427,9 @@ export default function AddTrade() {
                   <Layers size={14} className="select-prefix-icon" />
                   <select value={form.setup} onChange={e => updateField('setup', e.target.value)}>
                     <option value="">Select setup...</option>
-                    {/* Custom setups first */}
                     {storage.getCustomSetups().map(cs => (
-                      <option key={`custom-${cs.id}`} value={cs.name}>★ {cs.name}</option>
+                      <option key={cs.id} value={cs.name}>{cs.name}</option>
                     ))}
-                    {/* Default setups */}
-                    {SETUPS.filter(s => !storage.getCustomSetups().some(cs => cs.name === s)).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                   <ChevronDown size={14} className="select-icon" />
                 </div>
