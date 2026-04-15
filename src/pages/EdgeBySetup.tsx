@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sun, Moon, Bell, ChevronDown, Plus, X, Trash2,
-  TrendingUp, TrendingDown, Target, Shield, Clock,
-  BarChart2, CheckCircle2, AlertTriangle, Zap, Settings
+  Sun, Moon, Bell, ChevronDown, Plus, X, Trash2, Edit3,
+  TrendingUp, TrendingDown, Target,
+  BarChart2, CheckCircle2, AlertTriangle, Settings
 } from 'lucide-react';
 import { storage } from '../utils/storage';
-import { calcPnL, calcRiskReward, formatCurrency, getDisciplineBreakdown } from '../utils/calculations';
+import { calcPnL, calcRiskReward, formatCurrency } from '../utils/calculations';
 import type { Trade, CustomSetup } from '../types/trade';
+// types
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -16,19 +17,19 @@ const SETUP_COLORS = [
   '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#6366f1'
 ];
 
-interface SetupDetail {
-  setup: string;
-  trades: Trade[];
-  wins: number;
-  losses: number;
+interface SetupCardData {
+  name: string;
+  subtitle: string;
   winRate: number;
+  winRateChange: number;
+  trades: number;
   avgRR: number;
   pnl: number;
-  bestTrade: number;
-  worstTrade: number;
-  avgPnL: number;
-  streak: number;
+  tags: string[];
   color: string;
+  isCustom: boolean;
+  customId?: string;
+  tradesList: Trade[];
 }
 
 export default function EdgeBySetup() {
@@ -39,9 +40,11 @@ export default function EdgeBySetup() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [customSetups, setCustomSetups] = useState<CustomSetup[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [editingSetup, setEditingSetup] = useState<CustomSetup | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [isDark, setIsDark] = useState(getTheme() === 'dark');
   const [selectedSetup, setSelectedSetup] = useState<string | null>(null);
+  const [timePeriod, setTimePeriod] = useState('This Month');
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,56 +60,136 @@ export default function EdgeBySetup() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const setupDetails = useMemo((): SetupDetail[] => {
-    const map = new Map<string, Trade[]>();
-    trades.forEach(t => {
-      if (!map.has(t.setup)) map.set(t.setup, []);
-      map.get(t.setup)!.push(t);
+  // Filter trades by time period
+  const filteredTrades = useMemo(() => {
+    const now = new Date();
+    return trades.filter(t => {
+      const d = new Date(t.date);
+      if (timePeriod === 'This Week') {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return d >= weekAgo;
+      }
+      if (timePeriod === 'This Month') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      if (timePeriod === 'Last 3 Months') {
+        const threeMonths = new Date(now);
+        threeMonths.setMonth(threeMonths.getMonth() - 3);
+        return d >= threeMonths;
+      }
+      return true; // All Time
+    });
+  }, [trades, timePeriod]);
+
+  // Build setup cards from BOTH custom setups AND trades
+  const setupCards = useMemo((): SetupCardData[] => {
+    const cards: SetupCardData[] = [];
+    const usedSetupNames = new Set<string>();
+
+    // First: cards from custom setups (client's saved strategies)
+    customSetups.forEach((cs, i) => {
+      const setupTrades = filteredTrades.filter(t => t.setup === cs.name);
+      const wins = setupTrades.filter(t => calcPnL(t) > 0).length;
+      const pnls = setupTrades.map(t => calcPnL(t));
+      const rrs = setupTrades.map(t => calcRiskReward(t)).filter(r => r > 0);
+      const avgRR = rrs.length > 0 ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0;
+      const winRate = setupTrades.length > 0 ? (wins / setupTrades.length) * 100 : 0;
+
+      // Determine subtitle from timeframes and description
+      const subtitle = cs.timeframes.length > 0
+        ? cs.timeframes.join(' · ')
+        : cs.description || 'Custom Setup';
+
+      // Tags from entry/exit rules (first keyword of each)
+      const tags: string[] = [];
+      if (cs.entryRules.length > 0) tags.push(...cs.entryRules.slice(0, 2).map(r => r.split(' ').slice(0, 3).join(' ')));
+
+      cards.push({
+        name: cs.name,
+        subtitle,
+        winRate,
+        winRateChange: 0,
+        trades: setupTrades.length,
+        avgRR,
+        pnl: pnls.reduce((a, b) => a + b, 0),
+        tags: tags.length > 0 ? tags : [cs.name],
+        color: cs.color || SETUP_COLORS[i % SETUP_COLORS.length],
+        isCustom: true,
+        customId: cs.id,
+        tradesList: setupTrades,
+      });
+      usedSetupNames.add(cs.name);
     });
 
-    return Array.from(map.entries()).map(([setup, tds], i) => {
-      const wins = tds.filter(t => calcPnL(t) > 0);
-      const losses = tds.filter(t => calcPnL(t) <= 0);
+    // Second: cards from trades with setups NOT already covered by custom setups
+    const tradeMap = new Map<string, Trade[]>();
+    filteredTrades.forEach(t => {
+      if (t.setup && !usedSetupNames.has(t.setup)) {
+        if (!tradeMap.has(t.setup)) tradeMap.set(t.setup, []);
+        tradeMap.get(t.setup)!.push(t);
+      }
+    });
+
+    Array.from(tradeMap.entries()).forEach(([setup, tds], i) => {
+      const wins = tds.filter(t => calcPnL(t) > 0).length;
       const pnls = tds.map(t => calcPnL(t));
       const rrs = tds.map(t => calcRiskReward(t)).filter(r => r > 0);
       const avgRR = rrs.length > 0 ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0;
 
-      // Current winning streak
-      let streak = 0;
-      const sorted = tds.sort((a, b) => b.date.localeCompare(a.date));
-      for (const t of sorted) {
-        if (calcPnL(t) > 0) streak++;
-        else break;
-      }
+      // Determine asset type and timeframe from trades
+      const assetTypes = [...new Set(tds.map(t => t.assetType))];
+      const timeframes = [...new Set(tds.map(t => t.timeframe).filter(Boolean))];
+      const subtitle = [...assetTypes, ...timeframes].join(' · ') || 'Trading Setup';
 
-      const custom = customSetups.find(cs => cs.name === setup);
-
-      return {
-        setup,
-        trades: tds,
-        wins: wins.length,
-        losses: losses.length,
-        winRate: (wins.length / tds.length) * 100,
+      cards.push({
+        name: setup,
+        subtitle,
+        winRate: (wins / tds.length) * 100,
+        winRateChange: 0,
+        trades: tds.length,
         avgRR,
         pnl: pnls.reduce((a, b) => a + b, 0),
-        bestTrade: Math.max(...pnls),
-        worstTrade: Math.min(...pnls),
-        avgPnL: pnls.reduce((a, b) => a + b, 0) / pnls.length,
-        streak,
-        color: custom?.color || SETUP_COLORS[i % SETUP_COLORS.length],
-      };
-    }).sort((a, b) => b.pnl - a.pnl);
-  }, [trades, customSetups]);
+        tags: [setup],
+        color: SETUP_COLORS[(customSetups.length + i) % SETUP_COLORS.length],
+        isCustom: false,
+        tradesList: tds,
+      });
+    });
 
-  const discipline = useMemo(() => getDisciplineBreakdown(trades), [trades]);
+    return cards.sort((a, b) => b.pnl - a.pnl);
+  }, [filteredTrades, customSetups]);
 
-  const selectedDetail = selectedSetup ? setupDetails.find(s => s.setup === selectedSetup) : null;
+  const selectedCard = selectedSetup ? setupCards.find(c => c.name === selectedSetup) : null;
 
-  // Add new setup modal state
+  // Modal form state
   const [modalForm, setModalForm] = useState({
     name: '', description: '', entryRules: [''], exitRules: [''], slRules: [''],
     timeframes: [] as string[], color: SETUP_COLORS[0],
   });
+
+  function openEditModal(cs: CustomSetup) {
+    setEditingSetup(cs);
+    setModalForm({
+      name: cs.name,
+      description: cs.description,
+      entryRules: cs.entryRules.length > 0 ? cs.entryRules : [''],
+      exitRules: cs.exitRules.length > 0 ? cs.exitRules : [''],
+      slRules: cs.slRules.length > 0 ? cs.slRules : [''],
+      timeframes: cs.timeframes,
+      color: cs.color,
+    });
+    setShowModal(true);
+  }
+
+  function openNewModal() {
+    setEditingSetup(null);
+    setModalForm({
+      name: '', description: '', entryRules: [''], exitRules: [''], slRules: [''],
+      timeframes: [], color: SETUP_COLORS[customSetups.length % SETUP_COLORS.length],
+    });
+    setShowModal(true);
+  }
 
   function handleAddRule(field: 'entryRules' | 'exitRules' | 'slRules') {
     setModalForm(prev => ({ ...prev, [field]: [...prev[field], ''] }));
@@ -130,29 +213,50 @@ export default function EdgeBySetup() {
 
   function handleSaveSetup() {
     if (!modalForm.name.trim()) return;
-    const newSetup: CustomSetup = {
-      id: storage.generateId(),
-      name: modalForm.name.trim(),
-      description: modalForm.description.trim(),
-      entryRules: modalForm.entryRules.filter(r => r.trim()),
-      exitRules: modalForm.exitRules.filter(r => r.trim()),
-      slRules: modalForm.slRules.filter(r => r.trim()),
-      timeframes: modalForm.timeframes,
-      color: modalForm.color,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [...customSetups, newSetup];
-    setCustomSetups(updated);
-    storage.saveCustomSetups(updated);
+
+    if (editingSetup) {
+      // Update existing
+      const updated = customSetups.map(cs =>
+        cs.id === editingSetup.id ? {
+          ...cs,
+          name: modalForm.name.trim(),
+          description: modalForm.description.trim(),
+          entryRules: modalForm.entryRules.filter(r => r.trim()),
+          exitRules: modalForm.exitRules.filter(r => r.trim()),
+          slRules: modalForm.slRules.filter(r => r.trim()),
+          timeframes: modalForm.timeframes,
+          color: modalForm.color,
+        } : cs
+      );
+      setCustomSetups(updated);
+      storage.saveCustomSetups(updated);
+    } else {
+      // New
+      const newSetup: CustomSetup = {
+        id: storage.generateId(),
+        name: modalForm.name.trim(),
+        description: modalForm.description.trim(),
+        entryRules: modalForm.entryRules.filter(r => r.trim()),
+        exitRules: modalForm.exitRules.filter(r => r.trim()),
+        slRules: modalForm.slRules.filter(r => r.trim()),
+        timeframes: modalForm.timeframes,
+        color: modalForm.color,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [...customSetups, newSetup];
+      setCustomSetups(updated);
+      storage.saveCustomSetups(updated);
+    }
     setShowModal(false);
-    setModalForm({ name: '', description: '', entryRules: [''], exitRules: [''], slRules: [''], timeframes: [], color: SETUP_COLORS[(updated.length) % SETUP_COLORS.length] });
+    setEditingSetup(null);
   }
 
   function handleDeleteSetup(id: string) {
-    if (!window.confirm('Delete this custom setup?')) return;
+    if (!window.confirm('Delete this setup?')) return;
     const updated = customSetups.filter(s => s.id !== id);
     setCustomSetups(updated);
     storage.saveCustomSetups(updated);
+    if (selectedSetup) setSelectedSetup(null);
   }
 
   const allTimeframes = ['1 Minute', '5 Minute', '15 Minute', '30 Minute', '1 Hour', '4 Hour', 'Daily'];
@@ -163,12 +267,18 @@ export default function EdgeBySetup() {
       <div className="page-header">
         <div className="page-header-left">
           <h2>Edge by Setup</h2>
-          <p>Analyze performance across your trading setups</p>
+          <p>Define your trading setups to track performance and improve your edge.</p>
         </div>
         <div className="page-header-right">
-          <button className="header-btn add-trade-btn" onClick={() => setShowModal(true)}>
-            <Plus size={16} /> New Setup
-          </button>
+          <div className="select-wrapper">
+            <select value={timePeriod} onChange={e => setTimePeriod(e.target.value)} className="header-select">
+              <option>This Week</option>
+              <option>This Month</option>
+              <option>Last 3 Months</option>
+              <option>All Time</option>
+            </select>
+            <ChevronDown size={14} className="select-icon" />
+          </div>
           <button className="header-btn icon-only" onClick={() => { toggleTheme(); setIsDark(!isDark); }}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -204,190 +314,187 @@ export default function EdgeBySetup() {
       </div>
 
       <div className="page-content">
-        {/* DISCIPLINE SCORE OVERVIEW */}
-        <div className="card animate-in" style={{ marginBottom: 20 }}>
-          <div className="card-header">
-            <div className="card-title"><Target size={18} color="var(--green-600)" /> Discipline Score</div>
-            <div className="discipline-overall-badge">
-              <span className="discipline-overall-number">{discipline.overall}</span>/100
-            </div>
+        {/* TAB BAR + ADD SETUP */}
+        <div className="ebs-tab-bar">
+          <div className="ebs-tabs">
+            <button className="ebs-tab active">Setups</button>
           </div>
-          <div className="discipline-grid">
-            {discipline.components.map(comp => (
-              <div key={comp.name} className="discipline-comp-card">
-                <div className="discipline-comp-icon">{comp.icon}</div>
-                <div className="discipline-comp-info">
-                  <div className="discipline-comp-name">{comp.name}</div>
-                  <div className="discipline-comp-desc">{comp.description}</div>
-                </div>
-                <div className="discipline-comp-score">
-                  <div className="discipline-comp-bar">
-                    <div className="discipline-comp-bar-fill" style={{
-                      width: `${(comp.score / comp.maxScore) * 100}%`,
-                      background: comp.score / comp.maxScore > 0.7 ? 'var(--green-500)' : comp.score / comp.maxScore > 0.4 ? 'var(--orange-500)' : 'var(--red-500)',
-                    }} />
-                  </div>
-                  <span className="discipline-comp-val">{comp.score}/{comp.maxScore}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <button className="ebs-add-btn" onClick={openNewModal}>
+            <Plus size={16} /> Add New Setup
+          </button>
         </div>
 
-        {/* SETUP CARDS GRID */}
-        {setupDetails.length === 0 ? (
+        {/* SETUP CARDS GRID — 2 columns matching reference */}
+        {setupCards.length === 0 ? (
           <div className="card animate-in" style={{ padding: 60, textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: 8, color: 'var(--text-primary)' }}>No Setups Yet</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>Start adding trades with setups to see your edge analysis here.</p>
-            <button className="header-btn add-trade-btn" onClick={() => navigate('/add-trade')}><Plus size={16} /> Add Your First Trade</button>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>Create your first setup to start tracking your edge.</p>
+            <button className="ebs-add-btn" onClick={openNewModal}><Plus size={16} /> Add New Setup</button>
           </div>
         ) : (
-          <div className="setup-cards-grid">
-            {setupDetails.map(detail => (
-              <div
-                key={detail.setup}
-                className={`setup-card animate-in ${selectedSetup === detail.setup ? 'active' : ''}`}
-                onClick={() => setSelectedSetup(selectedSetup === detail.setup ? null : detail.setup)}
-                style={{ borderTop: `3px solid ${detail.color}` }}
-              >
-                <div className="setup-card-header">
-                  <div className="setup-card-name" style={{ color: detail.color }}>{detail.setup}</div>
-                  <div className={`setup-card-pnl ${detail.pnl >= 0 ? 'positive' : 'negative'}`}>
-                    {formatCurrency(detail.pnl)}
+          <div className="ebs-cards-grid">
+            {setupCards.map(card => {
+              const custom = customSetups.find(cs => cs.name === card.name);
+              return (
+                <div key={card.name} className={`ebs-card animate-in ${selectedSetup === card.name ? 'active' : ''}`}>
+                  {/* Card header */}
+                  <div className="ebs-card-top">
+                    <div>
+                      <div className="ebs-card-name">{card.name}</div>
+                      <div className="ebs-card-subtitle">{card.subtitle}</div>
+                    </div>
+                    <div className="ebs-card-actions">
+                      {card.isCustom && card.customId && (
+                        <>
+                          <button className="ebs-icon-btn" onClick={(e) => { e.stopPropagation(); if (custom) openEditModal(custom); }} title="Edit">
+                            <Edit3 size={14} />
+                          </button>
+                          <button className="ebs-icon-btn danger" onClick={(e) => { e.stopPropagation(); handleDeleteSetup(card.customId!); }} title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div className="ebs-card-stats">
+                    <div className="ebs-stat">
+                      <span className="ebs-stat-label">Win Rate</span>
+                      <span className={`ebs-stat-value ${card.winRate >= 50 ? 'positive' : 'negative'}`}>
+                        {card.trades > 0 ? `${card.winRate.toFixed(0)}%` : '—'}
+                      </span>
+                    </div>
+                    <div className="ebs-stat">
+                      <span className="ebs-stat-label">Trades</span>
+                      <span className="ebs-stat-value">{card.trades}</span>
+                    </div>
+                    <div className="ebs-stat">
+                      <span className="ebs-stat-label">Avg R:R</span>
+                      <span className="ebs-stat-value">{card.trades > 0 ? `1:${card.avgRR.toFixed(2)}` : '—'}</span>
+                    </div>
+                    <div className="ebs-stat">
+                      <span className="ebs-stat-label">Net P&L</span>
+                      <span className={`ebs-stat-value ${card.pnl >= 0 ? 'positive' : 'negative'}`}>
+                        {card.trades > 0 ? formatCurrency(card.pnl) : '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="ebs-card-tags">
+                    {card.tags.slice(0, 3).map((tag, i) => (
+                      <span key={i} className="ebs-tag" style={{ borderColor: card.color, color: card.color }}>{tag}</span>
+                    ))}
+                  </div>
+
+                  {/* Bottom actions */}
+                  <div className="ebs-card-bottom">
+                    <button className="ebs-view-btn" onClick={() => setSelectedSetup(selectedSetup === card.name ? null : card.name)}>
+                      View Details
+                    </button>
                   </div>
                 </div>
-                <div className="setup-card-stats">
-                  <div className="setup-stat">
-                    <span className="setup-stat-label">Win Rate</span>
-                    <span className="setup-stat-val" style={{ color: detail.winRate >= 50 ? 'var(--green-500)' : 'var(--red-500)' }}>
-                      {detail.winRate.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="setup-stat">
-                    <span className="setup-stat-label">Trades</span>
-                    <span className="setup-stat-val">{detail.trades.length}</span>
-                  </div>
-                  <div className="setup-stat">
-                    <span className="setup-stat-label">Avg R:R</span>
-                    <span className="setup-stat-val">1 : {detail.avgRR.toFixed(2)}</span>
-                  </div>
-                  <div className="setup-stat">
-                    <span className="setup-stat-label">Streak</span>
-                    <span className="setup-stat-val" style={{ color: 'var(--green-500)' }}>
-                      {detail.streak > 0 ? `${detail.streak}W` : '—'}
-                    </span>
-                  </div>
-                </div>
-                <div className="setup-card-bar">
-                  <div className="setup-card-bar-win" style={{ width: `${detail.winRate}%` }} />
-                </div>
-                <div className="setup-card-wl">
-                  <span className="positive">{detail.wins}W</span>
-                  <span className="negative">{detail.losses}L</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* SELECTED SETUP DETAIL */}
-        {selectedDetail && (
+        {selectedCard && (
           <div className="card animate-in" style={{ marginTop: 20 }}>
             <div className="card-header">
-              <div className="card-title" style={{ color: selectedDetail.color }}>
-                <Zap size={18} /> {selectedDetail.setup} — Detailed Analysis
+              <div className="card-title">
+                <TrendingUp size={18} color="var(--green-500)" /> {selectedCard.name} — Details
               </div>
             </div>
+
+            {/* Quick stats */}
             <div className="setup-detail-grid">
               <div className="setup-detail-item">
                 <TrendingUp size={16} color="var(--green-500)" />
                 <span>Best Trade</span>
-                <strong className="positive">{formatCurrency(selectedDetail.bestTrade)}</strong>
+                <strong className="positive">
+                  {selectedCard.tradesList.length > 0 ? formatCurrency(Math.max(...selectedCard.tradesList.map(t => calcPnL(t)))) : '—'}
+                </strong>
               </div>
               <div className="setup-detail-item">
                 <TrendingDown size={16} color="var(--red-500)" />
                 <span>Worst Trade</span>
-                <strong className="negative">{formatCurrency(selectedDetail.worstTrade)}</strong>
+                <strong className="negative">
+                  {selectedCard.tradesList.length > 0 ? formatCurrency(Math.min(...selectedCard.tradesList.map(t => calcPnL(t)))) : '—'}
+                </strong>
               </div>
               <div className="setup-detail-item">
                 <BarChart2 size={16} color="var(--text-secondary)" />
                 <span>Avg P&L</span>
-                <strong className={selectedDetail.avgPnL >= 0 ? 'positive' : 'negative'}>{formatCurrency(selectedDetail.avgPnL)}</strong>
+                <strong className={selectedCard.pnl >= 0 ? 'positive' : 'negative'}>
+                  {selectedCard.trades > 0 ? formatCurrency(selectedCard.pnl / selectedCard.trades) : '—'}
+                </strong>
               </div>
               <div className="setup-detail-item">
                 <Target size={16} color="var(--text-secondary)" />
                 <span>Win Rate</span>
-                <strong>{selectedDetail.winRate.toFixed(1)}%</strong>
+                <strong>{selectedCard.trades > 0 ? `${selectedCard.winRate.toFixed(1)}%` : '—'}</strong>
               </div>
             </div>
-            {/* Recent trades for this setup */}
-            <div style={{ marginTop: 16 }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>Recent Trades</h4>
-              <table className="data-table">
-                <thead>
-                  <tr><th>Date</th><th>Instrument</th><th>Direction</th><th>Entry → Exit</th><th>P&L</th></tr>
-                </thead>
-                <tbody>
-                  {selectedDetail.trades.slice(0, 5).map(t => (
-                    <tr key={t.id}>
-                      <td>{new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                      <td style={{ fontWeight: 600 }}>{t.instrument}</td>
-                      <td><span className={`direction-badge ${t.direction.toLowerCase()}`}>{t.direction}</span></td>
-                      <td>{t.entryPrice.toLocaleString()} → {t.exitPrice.toLocaleString()}</td>
-                      <td><span className={calcPnL(t) >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 600 }}>{formatCurrency(calcPnL(t))}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
-        {/* CUSTOM SETUPS LIST */}
-        {customSetups.length > 0 && (
-          <div className="card animate-in" style={{ marginTop: 20 }}>
-            <div className="card-header">
-              <div className="card-title"><Shield size={18} color="var(--purple-500, #8b5cf6)" /> Custom Setup Rules</div>
-            </div>
-            <div className="custom-setups-list">
-              {customSetups.map(cs => (
-                <div key={cs.id} className="custom-setup-item" style={{ borderLeft: `3px solid ${cs.color}` }}>
-                  <div className="custom-setup-header">
-                    <strong>{cs.name}</strong>
-                    <button className="custom-setup-delete" onClick={() => handleDeleteSetup(cs.id)}><Trash2 size={14} /></button>
-                  </div>
-                  {cs.description && <p className="custom-setup-desc">{cs.description}</p>}
+            {/* Setup rules if custom */}
+            {(() => {
+              const cs = customSetups.find(c => c.name === selectedCard.name);
+              if (!cs) return null;
+              return (
+                <div style={{ marginTop: 16, padding: '16px 0', borderTop: '1px solid var(--border-light)' }}>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>Setup Rules</h4>
                   <div className="custom-setup-rules">
                     {cs.entryRules.length > 0 && (
-                      <div><span className="rule-label">Entry:</span> {cs.entryRules.map((r, i) => <span key={i} className="rule-tag green">{r}</span>)}</div>
+                      <div><span className="rule-label">ENTRY:</span> {cs.entryRules.map((r, i) => <span key={i} className="rule-tag green">{r}</span>)}</div>
                     )}
                     {cs.slRules.length > 0 && (
                       <div><span className="rule-label">SL:</span> {cs.slRules.map((r, i) => <span key={i} className="rule-tag red">{r}</span>)}</div>
                     )}
                     {cs.exitRules.length > 0 && (
-                      <div><span className="rule-label">Target:</span> {cs.exitRules.map((r, i) => <span key={i} className="rule-tag blue">{r}</span>)}</div>
+                      <div><span className="rule-label">TARGET:</span> {cs.exitRules.map((r, i) => <span key={i} className="rule-tag blue">{r}</span>)}</div>
                     )}
                   </div>
-                  {cs.timeframes.length > 0 && (
-                    <div className="custom-setup-tfs">
-                      <Clock size={12} /> {cs.timeframes.join(', ')}
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
+
+            {/* Recent trades */}
+            {selectedCard.tradesList.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>Recent Trades</h4>
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Date</th><th>Instrument</th><th>Direction</th><th>Entry → Exit</th><th>P&L</th></tr>
+                  </thead>
+                  <tbody>
+                    {selectedCard.tradesList.slice(0, 5).map(t => (
+                      <tr key={t.id}>
+                        <td>{new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                        <td style={{ fontWeight: 600 }}>{t.instrument}</td>
+                        <td><span className={`direction-badge ${t.direction.toLowerCase()}`}>{t.direction}</span></td>
+                        <td>{t.entryPrice.toLocaleString()} → {t.exitPrice.toLocaleString()}</td>
+                        <td><span className={calcPnL(t) >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 600 }}>{formatCurrency(calcPnL(t))}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* ADD NEW SETUP MODAL */}
+      {/* ADD/EDIT SETUP MODAL */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={() => { setShowModal(false); setEditingSetup(null); }}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add New Setup</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}><X size={18} /></button>
+              <h3>{editingSetup ? 'Edit Setup' : 'Add New Setup'}</h3>
+              <button className="modal-close" onClick={() => { setShowModal(false); setEditingSetup(null); }}><X size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="modal-field">
@@ -464,8 +571,10 @@ export default function EdgeBySetup() {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="modal-cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="modal-save-btn" onClick={handleSaveSetup} disabled={!modalForm.name.trim()}>Save Setup</button>
+              <button className="modal-cancel-btn" onClick={() => { setShowModal(false); setEditingSetup(null); }}>Cancel</button>
+              <button className="modal-save-btn" onClick={handleSaveSetup} disabled={!modalForm.name.trim()}>
+                {editingSetup ? 'Update Setup' : 'Save Setup'}
+              </button>
             </div>
           </div>
         </div>
