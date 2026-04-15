@@ -6,6 +6,7 @@ import AddTrade from './pages/AddTrade';
 import AllTrades from './pages/AllTrades';
 import Settings from './pages/Settings';
 import EdgeBySetup from './pages/EdgeBySetup';
+import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { applyTheme, getTheme } from './utils/theme';
@@ -48,7 +49,8 @@ function ProtectedApp() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/add-trade" element={<AddTrade />} />
           <Route path="/all-trades" element={<AllTrades />} />
-          <Route path="/analytics" element={<EdgeBySetup />} />
+          <Route path="/edge-by-setup" element={<EdgeBySetup />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
           <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
           <Route path="/settings" element={<Settings />} />

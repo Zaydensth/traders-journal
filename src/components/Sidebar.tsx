@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState, useMemo } from 'react';
 import {
-  LayoutDashboard, PlusCircle, FileText,
+  LayoutDashboard, PlusCircle, FileText, BarChart2,
   AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb,
   RefreshCw, ClipboardList, Layers, Star, Menu, X
 } from 'lucide-react';
@@ -89,13 +89,17 @@ export default function Sidebar() {
             <span className="sidebar-icon"><PlusCircle size={18} /></span>
             Add Trade
           </NavLink>
-          <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/edge-by-setup" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><Layers size={18} /></span>
             Edge by Setup
           </NavLink>
           <NavLink to="/all-trades" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><FileText size={18} /></span>
             All Trades
+          </NavLink>
+          <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><BarChart2 size={18} /></span>
+            Analytics
           </NavLink>
           <NavLink to="/mistake-log" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><AlertTriangle size={18} /></span>
@@ -121,6 +125,16 @@ export default function Sidebar() {
               <span className="sidebar-widget-title" style={{ margin: 0 }}>Pro Tip</span>
             </div>
             <p>Always define your stop loss before entering a trade. Risk only 1–2% of capital per trade.</p>
+          </div>
+        ) : location.pathname === '/edge-by-setup' ? (
+          <div className="sidebar-pro-tip">
+            <div className="pro-tip-header">
+              <div className="pro-tip-icon">
+                <Lightbulb size={15} />
+              </div>
+              <span className="sidebar-widget-title" style={{ margin: 0 }}>Pro Tip</span>
+            </div>
+            <p>Professional traders do not have many setups. 1 to 3 core setups. That's it.</p>
           </div>
         ) : location.pathname === '/all-trades' ? (
           <div className="sidebar-quick-stats">
