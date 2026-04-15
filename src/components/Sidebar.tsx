@@ -89,13 +89,13 @@ export default function Sidebar() {
             <span className="sidebar-icon"><PlusCircle size={18} /></span>
             Add Trade
           </NavLink>
-          <NavLink to="/all-trades" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-icon"><FileText size={18} /></span>
-            All Trades
-          </NavLink>
           <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><Layers size={18} /></span>
             Edge by Setup
+          </NavLink>
+          <NavLink to="/all-trades" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><FileText size={18} /></span>
+            All Trades
           </NavLink>
           <NavLink to="/mistake-log" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><AlertTriangle size={18} /></span>
