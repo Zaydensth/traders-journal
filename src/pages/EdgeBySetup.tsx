@@ -345,16 +345,40 @@ export default function EdgeBySetup() {
                       <div className="ebs-card-subtitle">{card.subtitle}</div>
                     </div>
                     <div className="ebs-card-actions">
-                      {card.isCustom && card.customId && (
-                        <>
-                          <button className="ebs-icon-btn" onClick={(e) => { e.stopPropagation(); if (custom) openEditModal(custom); }} title="Edit">
-                            <Edit3 size={14} />
-                          </button>
-                          <button className="ebs-icon-btn danger" onClick={(e) => { e.stopPropagation(); handleDeleteSetup(card.customId!); }} title="Delete">
-                            <Trash2 size={14} />
-                          </button>
-                        </>
-                      )}
+                      <button className="ebs-icon-btn" onClick={(e) => {
+                        e.stopPropagation();
+                        if (custom) {
+                          openEditModal(custom);
+                        } else {
+                          // Create a custom setup from this trade-based setup
+                          const newCs: CustomSetup = {
+                            id: storage.generateId(),
+                            name: card.name,
+                            description: card.subtitle,
+                            entryRules: [],
+                            exitRules: [],
+                            slRules: [],
+                            timeframes: [],
+                            color: card.color,
+                            createdAt: new Date().toISOString(),
+                          };
+                          openEditModal(newCs);
+                          // Save it so it persists
+                          const updated = [...customSetups, newCs];
+                          setCustomSetups(updated);
+                          storage.saveCustomSetups(updated);
+                        }
+                      }} title="Edit">
+                        <Edit3 size={14} />
+                      </button>
+                      <button className="ebs-icon-btn danger" onClick={(e) => {
+                        e.stopPropagation();
+                        if (card.isCustom && card.customId) {
+                          handleDeleteSetup(card.customId);
+                        }
+                      }} title="Delete">
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
 
@@ -398,6 +422,52 @@ export default function EdgeBySetup() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* CUSTOM SETUP RULES — matching reference Image 2 */}
+        {customSetups.length > 0 && (
+          <div className="ebs-rules-section">
+            <div className="ebs-rules-header">
+              <Target size={16} color="var(--text-secondary)" />
+              <h3>Custom Setup Rules</h3>
+            </div>
+            {customSetups.map(cs => (
+              <div key={cs.id} className="ebs-rule-card" style={{ borderLeftColor: cs.color }}>
+                <div className="ebs-rule-card-top">
+                  <div>
+                    <div className="ebs-rule-card-name">{cs.name}</div>
+                    <div className="ebs-rule-card-desc">{cs.description}</div>
+                  </div>
+                  <button className="ebs-icon-btn danger" onClick={() => handleDeleteSetup(cs.id)} title="Delete">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                {cs.entryRules.length > 0 && (
+                  <div className="ebs-rule-row">
+                    <span className="rule-label">ENTRY:</span>
+                    {cs.entryRules.map((r, i) => <span key={i} className="rule-tag green">{r}</span>)}
+                  </div>
+                )}
+                {cs.slRules.length > 0 && (
+                  <div className="ebs-rule-row">
+                    <span className="rule-label">SL:</span>
+                    {cs.slRules.map((r, i) => <span key={i} className="rule-tag red">{r}</span>)}
+                  </div>
+                )}
+                {cs.exitRules.length > 0 && (
+                  <div className="ebs-rule-row">
+                    <span className="rule-label">TARGET:</span>
+                    {cs.exitRules.map((r, i) => <span key={i} className="rule-tag blue">{r}</span>)}
+                  </div>
+                )}
+                {cs.timeframes.length > 0 && (
+                  <div className="ebs-rule-timeframe">
+                    <Target size={12} color="var(--text-muted)" /> {cs.timeframes.join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
