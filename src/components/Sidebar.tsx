@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useEffect, useState, useMemo } from 'react';
 import {
-  LayoutDashboard, PlusCircle, FileText, BarChart2,
+  LayoutDashboard, PlusCircle, FileText,
   AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb,
   RefreshCw, ClipboardList, Layers, Star, Menu, X
 } from 'lucide-react';
@@ -94,8 +94,8 @@ export default function Sidebar() {
             All Trades
           </NavLink>
           <NavLink to="/analytics" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-icon"><BarChart2 size={18} /></span>
-            Analytics
+            <span className="sidebar-icon"><Layers size={18} /></span>
+            Edge by Setup
           </NavLink>
           <NavLink to="/mistake-log" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><AlertTriangle size={18} /></span>
