@@ -15,7 +15,7 @@ import type { Trade, TradeStats } from '../types/trade';
 import { SETUPS, ASSET_TYPES } from '../types/trade';
 import { storage } from '../utils/storage';
 import {
-  getTradeStats, calcPnL, calcRiskReward, calcRMultiple, formatCurrency
+  getTradeStats, calcPnL, calcRiskReward, calcRMultiple, formatCurrency, pnlColorClass
 } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
@@ -290,7 +290,7 @@ export default function AllTrades() {
                       <div className={`notif-dot-indicator ${pnl >= 0 ? 'green' : 'red'}`} />
                       <div className="notif-content">
                         <div className="notif-trade-title">{trade.instrument} · {trade.direction}</div>
-                        <div className={`notif-trade-value ${pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pnl)}</div>
+                        <div className={`notif-trade-value ${pnlColorClass(pnl)}`}>{formatCurrency(pnl)}</div>
                       </div>
                       <div className="notif-trade-date">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                     </div>
@@ -450,7 +450,7 @@ export default function AllTrades() {
           <div className="stat-card animate-in">
             <div className="stat-card-icon green"><FaSackDollar size={22} /></div>
             <div className="stat-card-label">Total Net P&L</div>
-            <div className={`stat-card-value ${filteredStats.pnl >= 0 ? 'positive' : 'negative'}`}>
+            <div className={`stat-card-value ${pnlColorClass(filteredStats.pnl)}`}>
               {formatCurrency(filteredStats.pnl)}
             </div>
             <div className={`stat-card-change ${stats.pnlChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -577,7 +577,7 @@ export default function AllTrades() {
                         <td style={{ whiteSpace: 'nowrap' }}>1 : {rr.toFixed(1)}</td>
                         <td>
                           <div className="result-cell">
-                            <span className={pnl >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 700 }}>
+                            <span className={pnlColorClass(pnl)} style={{ fontWeight: 700 }}>
                               {formatCurrency(pnl)}
                             </span>
                             <span className={`result-rmultiple ${rm >= 0 ? 'positive' : 'negative'}`}>
@@ -648,7 +648,7 @@ export default function AllTrades() {
                         </div>
                         <div className="at-grid-row">
                           <span className="at-grid-label">P&L</span>
-                          <span className={`at-grid-val ${pnl >= 0 ? 'positive' : 'negative'}`} style={{ fontWeight: 700 }}>{formatCurrency(pnl)}</span>
+                          <span className={`at-grid-val ${pnlColorClass(pnl)}`} style={{ fontWeight: 700 }}>{formatCurrency(pnl)}</span>
                         </div>
                         {trade.mistake && (
                           <div className="at-grid-row">

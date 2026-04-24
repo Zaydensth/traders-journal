@@ -503,6 +503,10 @@ input, select, textarea { font-family: inherit; outline: none; }
 
 .stat-card-value.positive { color: var(--green-600); }
 .stat-card-value.negative { color: var(--red-600); }
+.stat-card-value.neutral { color: var(--text-primary); }
+.positive { color: var(--green-600); }
+.negative { color: var(--red-600); }
+.neutral { color: var(--text-primary); }
 
 .stat-card-change {
   display: flex;

@@ -30,7 +30,8 @@ import {
   getEquityCurve,
   calcPnL,
   calcRiskReward,
-  formatCurrency
+  formatCurrency,
+  pnlColorClass
 } from '../utils/calculations';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -262,7 +263,7 @@ export default function Dashboard() {
                       <div className={`notif-dot-indicator ${pnl >= 0 ? 'green' : 'red'}`} />
                       <div className="notif-content">
                         <div className="notif-trade-title">{trade.instrument} · {trade.direction}</div>
-                        <div className={`notif-trade-value ${pnl >= 0 ? 'positive' : 'negative'}`}>{formatCurrency(pnl)}</div>
+                        <div className={`notif-trade-value ${pnlColorClass(pnl)}`}>{formatCurrency(pnl)}</div>
                       </div>
                       <div className="notif-trade-date">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                     </div>
@@ -316,7 +317,7 @@ export default function Dashboard() {
           <div className="stat-card animate-in">
             <div className="stat-card-icon green"><FaSackDollar size={22} /></div>
             <div className="stat-card-label">Net P&L</div>
-            <div className={`stat-card-value ${stats.netPnL >= 0 ? 'positive' : 'negative'}`}>
+            <div className={`stat-card-value ${pnlColorClass(stats.netPnL)}`}>
               {formatCurrency(stats.netPnL)}
             </div>
             <div className={`stat-card-change ${stats.pnlChangeVsLastWeek >= 0 ? 'up' : 'down'}`}>
@@ -345,7 +346,7 @@ export default function Dashboard() {
           <div className="stat-card animate-in">
             <div className="stat-card-icon orange"><BarChart3 size={22} /></div>
             <div className="stat-card-label">Expectancy</div>
-            <div className={`stat-card-value ${stats.expectancy >= 0 ? 'positive' : 'negative'}`}>
+            <div className={`stat-card-value ${pnlColorClass(stats.expectancy)}`}>
               {formatCurrency(stats.expectancy)}/trade
             </div>
           </div>
@@ -476,7 +477,7 @@ export default function Dashboard() {
                       </td>
                       <td>{edge.avgRR}</td>
                       <td>
-                        <span className={edge.pnl >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 600 }}>
+                        <span className={pnlColorClass(edge.pnl)} style={{ fontWeight: 600 }}>
                           {formatCurrency(edge.pnl)}
                         </span>
                       </td>
@@ -568,7 +569,7 @@ export default function Dashboard() {
                       <td>{trade.exitPrice.toLocaleString()}</td>
                       <td>1 : {rr.toFixed(1)}</td>
                       <td>
-                        <span className={pnl >= 0 ? 'positive' : 'negative'} style={{ fontWeight: 600 }}>
+                        <span className={pnlColorClass(pnl)} style={{ fontWeight: 600 }}>
                           {formatCurrency(pnl)}
                         </span>
                       </td>

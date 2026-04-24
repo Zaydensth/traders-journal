@@ -306,8 +306,15 @@ export function getDisciplineBreakdown(trades: Trade[]): DisciplineBreakdown {
 }
 
 export function formatCurrency(amount: number, symbol = '₹'): string {
-  const prefix = amount >= 0 ? '+' : '';
+  if (amount === 0) return `${symbol}0`;
+  const prefix = amount > 0 ? '+' : '-';
   return `${prefix}${symbol}${Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+}
+
+export function pnlColorClass(amount: number): string {
+  if (amount > 0) return 'positive';
+  if (amount < 0) return 'negative';
+  return 'neutral';
 }
 
 function formatShortDate(dateStr: string): string {
