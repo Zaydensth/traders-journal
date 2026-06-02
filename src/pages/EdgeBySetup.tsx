@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sun, Moon, Bell, ChevronDown, Plus, X, Trash2, Edit3,
+  Sun, Moon, ChevronDown, Plus, X, Trash2, Edit3,
   TrendingUp, TrendingDown, Target, MoreHorizontal,
   BarChart2, CheckCircle2, AlertTriangle, Settings
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import type { Trade, CustomSetup } from '../types/trade';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
+import NotificationBell from '../components/NotificationBell';
 
 const SETUP_COLORS = [
   '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -291,7 +292,7 @@ export default function EdgeBySetup() {
           <button className="header-btn icon-only" onClick={() => { toggleTheme(); setIsDark(!isDark); }}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <div className="header-btn icon-only"><Bell size={18} /></div>
+          <NotificationBell />
           <div className="dropdown-wrap" ref={profileRef}>
             <div className="user-profile-badge" onClick={() => setShowProfile(v => !v)}>
               <div className="user-avatar">{userInitials}</div>

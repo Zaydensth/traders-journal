@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Sun, Moon, Bell, ChevronDown, History, BarChart3, Award,
+  ArrowLeft, Sun, Moon, ChevronDown, History, BarChart3, Award,
   LayoutDashboard, Settings, FileText
 } from 'lucide-react';
 import type { ChecklistRun } from '../types/checklist';
 import { storage } from '../utils/storage';
-import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from '../components/NotificationBell';
 
 function fmtDate(d: string): string {
   return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -23,19 +23,14 @@ export default function ChecklistHistory() {
   const [runs, setRuns] = useState<ChecklistRun[]>([]);
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const [showProfile, setShowProfile] = useState(false);
-  const [showBell, setShowBell] = useState(false);
-  const [bellRead, setBellRead] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
-  const bellRef = useRef<HTMLDivElement>(null);
-  const notifTrades = useMemo(() => storage.getTrades().slice(0, 5), []);
 
   useEffect(() => { setRuns(storage.getChecklistRuns()); }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -63,35 +58,9 @@ export default function ChecklistHistory() {
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-          <div className="dropdown-wrap" ref={bellRef}>
-            <div style={{ position: 'relative' }}>
-              <button className="header-btn" onClick={() => { setShowBell(v => !v); setBellRead(true); setShowProfile(false); }}>
-                <Bell size={15} />
-              </button>
-              {!bellRead && <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />}
-            </div>
-            {showBell && (
-              <div className="dropdown-panel notif-dropdown">
-                <div className="notif-panel-header"><span>Recent Trades</span><span className="notif-badge">{notifTrades.length}</span></div>
-                {notifTrades.map(trade => {
-                  const pnl = calcPnL(trade);
-                  return (
-                    <div key={trade.id} className="notif-item">
-                      <div className={`notif-dot-indicator ${pnl >= 0 ? 'green' : 'red'}`} />
-                      <div className="notif-content">
-                        <div className="notif-trade-title">{trade.instrument} · {trade.direction}</div>
-                        <div className={`notif-trade-value ${pnlColorClass(pnl)}`}>{formatCurrency(pnl)}</div>
-                      </div>
-                      <div className="notif-trade-date">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                    </div>
-                  );
-                })}
-                {notifTrades.length === 0 && <div className="notif-empty">No trades yet</div>}
-              </div>
-            )}
-          </div>
+          <NotificationBell />
           <div className="dropdown-wrap" ref={profileRef}>
-            <div className="user-profile-badge" onClick={() => { setShowProfile(v => !v); setShowBell(false); }}>
+            <div className="user-profile-badge" onClick={() => setShowProfile(v => !v)}>
               <div className="user-avatar">{userInitials}</div>
               <div className="user-profile-info">
                 <span className="user-profile-name">{userName}</span>

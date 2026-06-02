@@ -120,4 +120,16 @@ export const storage = {
     const key = _uid ? `tj_checklist_current_${_uid}` : 'tj_checklist_current_none';
     localStorage.setItem(key, JSON.stringify(cr));
   },
+
+  /* ─── Notifications (read state) ─── */
+  getReadNotifications: (): string[] => {
+    const key = _uid ? `tj_notif_read_${_uid}` : 'tj_notif_read_none';
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveReadNotifications: (ids: string[]): void => {
+    const key = _uid ? `tj_notif_read_${_uid}` : 'tj_notif_read_none';
+    localStorage.setItem(key, JSON.stringify(ids));
+  },
 };

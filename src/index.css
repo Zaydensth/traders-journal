@@ -4410,6 +4410,18 @@ button.view-all-link { background: transparent; }
 .hist-bar-fill.good { background: var(--green-500); }
 .hist-bar-fill.bad { background: var(--red-400); }
 
+/* =================== NOTIFICATION BELL (shared, professional) =================== */
+.notif-count-badge { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; background: var(--red-500); color: #fff; font-size: 0.6rem; font-weight: 700; border-radius: 99px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--bg-sidebar); pointer-events: none; line-height: 1; }
+.notif-markread { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: var(--green-600); background: transparent; padding: 3px 6px; border-radius: var(--radius-sm); transition: background 0.15s ease; }
+.notif-markread:hover { background: var(--green-50); }
+.notif-allread { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+.notif-list { max-height: 326px; overflow-y: auto; }
+.notif-item.unread { background: var(--green-50); }
+.notif-item.unread:hover { background: var(--green-100); }
+.notif-item.unread .notif-trade-title { font-weight: 700; }
+.notif-seeall { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-top: 1px solid var(--border-light); font-size: 0.8rem; font-weight: 600; color: var(--green-600); background: transparent; transition: background 0.15s ease; }
+.notif-seeall:hover { background: var(--bg-primary); }
+
 /* =================== TRADE DETAIL MODAL (View) =================== */
 .td-detail-card { max-width: 480px; }
 .td-detail-card .modal-body { overflow-y: auto; }

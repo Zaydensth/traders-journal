@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Sun, Moon, Bell, ChevronDown, Plus, Search, Filter, Check, Pencil, Trash2,
+  ArrowLeft, Sun, Moon, ChevronDown, Plus, Search, Filter, Check, Pencil, Trash2,
   Edit3, GripVertical, Share2, MoreHorizontal, ClipboardList, Copy,
   LayoutDashboard, Settings, FileText
 } from 'lucide-react';
 import type { ChecklistTemplate, ChecklistSection, ChecklistItemDef } from '../types/checklist';
 import { CHECKLIST_CATEGORIES, countPoints } from '../types/checklist';
 import { storage } from '../utils/storage';
-import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
+import NotificationBell from '../components/NotificationBell';
 import { useToast } from '../utils/useToast';
 
 const SETUP_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
@@ -54,15 +54,10 @@ export default function MyChecklists() {
 
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const [showProfile, setShowProfile] = useState(false);
-  const [showBell, setShowBell] = useState(false);
-  const [bellRead, setBellRead] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
-  const bellRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ sectionId: string; itemId: string } | null>(null);
-
-  const notifTrades = useMemo(() => storage.getTrades().slice(0, 5), []);
 
   useEffect(() => {
     const cls = storage.getChecklists();
@@ -84,7 +79,6 @@ export default function MyChecklists() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) setShowFilter(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -263,35 +257,9 @@ export default function MyChecklists() {
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-          <div className="dropdown-wrap" ref={bellRef}>
-            <div style={{ position: 'relative' }}>
-              <button className="header-btn" onClick={() => { setShowBell(v => !v); setBellRead(true); setShowProfile(false); }}>
-                <Bell size={15} />
-              </button>
-              {!bellRead && <span style={{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, background: 'var(--red-500)', borderRadius: '50%', border: '1.5px solid var(--bg-card)', pointerEvents: 'none' }} />}
-            </div>
-            {showBell && (
-              <div className="dropdown-panel notif-dropdown">
-                <div className="notif-panel-header"><span>Recent Trades</span><span className="notif-badge">{notifTrades.length}</span></div>
-                {notifTrades.map(trade => {
-                  const pnl = calcPnL(trade);
-                  return (
-                    <div key={trade.id} className="notif-item">
-                      <div className={`notif-dot-indicator ${pnl >= 0 ? 'green' : 'red'}`} />
-                      <div className="notif-content">
-                        <div className="notif-trade-title">{trade.instrument} · {trade.direction}</div>
-                        <div className={`notif-trade-value ${pnlColorClass(pnl)}`}>{formatCurrency(pnl)}</div>
-                      </div>
-                      <div className="notif-trade-date">{new Date(trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                    </div>
-                  );
-                })}
-                {notifTrades.length === 0 && <div className="notif-empty">No trades yet</div>}
-              </div>
-            )}
-          </div>
+          <NotificationBell />
           <div className="dropdown-wrap" ref={profileRef}>
-            <div className="user-profile-badge" onClick={() => { setShowProfile(v => !v); setShowBell(false); }}>
+            <div className="user-profile-badge" onClick={() => setShowProfile(v => !v)}>
               <div className="user-avatar">{userInitials}</div>
               <div className="user-profile-info">
                 <span className="user-profile-name">{userName}</span>

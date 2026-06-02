@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sun, Moon, Bell, ChevronDown, BarChart2, Target, TrendingUp,
+  Sun, Moon, ChevronDown, BarChart2, Target, TrendingUp,
   TrendingDown, CheckCircle2, AlertTriangle, Clock, BookOpen,
   Settings
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import {
 } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from '../components/NotificationBell';
 
 export default function Analytics() {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ export default function Analytics() {
           <button className="header-btn icon-only" onClick={() => { toggleTheme(); setIsDark(!isDark); }}>
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <div className="header-btn icon-only"><Bell size={18} /></div>
+          <NotificationBell />
           <div className="dropdown-wrap" ref={profileRef}>
             <div className="user-profile-badge" onClick={() => setShowProfile(v => !v)}>
               <div className="user-avatar">{userInitials}</div>
