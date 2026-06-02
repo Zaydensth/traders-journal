@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, Download, Trash2,
   ChevronDown, ChevronUp, Calendar,
@@ -48,6 +48,7 @@ type SortField = 'date' | 'instrument' | 'setup' | 'direction' | 'entryPrice' | 
 
 export default function AllTrades() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Trader';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -86,6 +87,15 @@ export default function AllTrades() {
     setTrades(data);
     setStats(getTradeStats(data));
   }, []);
+
+  // Open a specific trade's detail when arriving from a notification.
+  useEffect(() => {
+    const st = location.state as { viewTradeId?: string } | null;
+    if (st?.viewTradeId) {
+      const t = storage.getTrades().find(tr => tr.id === st.viewTradeId);
+      if (t) setViewTrade(t);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

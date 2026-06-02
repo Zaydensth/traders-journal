@@ -10,6 +10,7 @@ import Analytics from './pages/Analytics';
 import TradingChecklist from './pages/TradingChecklist';
 import MyChecklists from './pages/MyChecklists';
 import ChecklistHistory from './pages/ChecklistHistory';
+import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { applyTheme, getTheme } from './utils/theme';
@@ -55,6 +56,7 @@ function ProtectedApp() {
           <Route path="/trading-checklist" element={<TradingChecklist />} />
           <Route path="/trading-checklist/manage" element={<MyChecklists />} />
           <Route path="/trading-checklist/history" element={<ChecklistHistory />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/mistake-log" element={<PlaceholderPage title="Mistake Log" icon="⚠️" />} />
           <Route path="/daily-review" element={<PlaceholderPage title="Daily Review" icon="📝" />} />
           <Route path="/settings" element={<Settings />} />
