@@ -4356,3 +4356,56 @@ button.view-all-link { background: transparent; }
 .mc-settings-title { font-size: 0.98rem; font-weight: 700; margin-bottom: 16px; }
 .mc-delete-checklist { width: 100%; padding: 11px; border-radius: var(--radius-sm); background: var(--red-50); color: var(--red-600); border: 1px solid var(--red-100); font-size: 0.84rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .mc-delete-checklist:hover { background: var(--red-100); }
+
+/* =================== CONFIRM DIALOG (centered, professional) =================== */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1100; padding: 24px; animation: cfFade 0.15s ease; }
+.confirm-card { width: 100%; max-width: 400px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 26px 22px; text-align: center; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28); animation: cfPop 0.18s ease; }
+.confirm-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--bg-input); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.confirm-icon.danger { background: var(--red-50); color: var(--red-500); }
+.confirm-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.confirm-message { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-cancel, .confirm-ok { flex: 1; padding: 11px; border-radius: var(--radius-sm); font-size: 0.86rem; font-weight: 600; transition: all 0.15s ease; }
+.confirm-cancel { background: var(--bg-input); color: var(--text-primary); }
+.confirm-cancel:hover { background: var(--border); }
+.confirm-ok { background: var(--green-500); color: #fff; }
+.confirm-ok:hover { background: var(--green-600); }
+.confirm-ok.danger { background: var(--red-500); }
+.confirm-ok.danger:hover { background: var(--red-600); }
+@keyframes cfFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cfPop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* =================== BACK BUTTON =================== */
+.page-back-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); background: transparent; margin-bottom: 7px; padding: 0; }
+.page-back-btn:hover { color: var(--green-600); }
+
+/* =================== TOAST =================== */
+.app-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--bg-card); padding: 11px 20px; border-radius: var(--radius-full); font-size: 0.82rem; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 1200; animation: tjToast 0.25s ease; }
+@keyframes tjToast { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+/* =================== MY CHECKLISTS — search + filter (refined, rounded) =================== */
+.mc-search-row .input-with-icon input { width: 100%; padding: 11px 12px 11px 34px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); font-size: 0.84rem; color: var(--text-primary); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.mc-search-row .input-with-icon input::placeholder { color: var(--text-muted); }
+.mc-search-row .input-with-icon input:focus { border-color: var(--green-400); box-shadow: 0 0 0 3px var(--green-50); }
+.mc-search-row .input-with-icon .input-icon { left: 12px; }
+.mc-filter-wrap { position: relative; flex-shrink: 0; }
+.mc-filter-btn { width: 44px; height: 44px; border-radius: var(--radius-md); }
+.mc-filter-btn.active { border-color: var(--green-500); color: var(--green-600); background: var(--green-50); }
+.mc-filter-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 152px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; z-index: 60; display: flex; flex-direction: column; gap: 2px; }
+.mc-filter-opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-secondary); background: transparent; text-align: left; }
+.mc-filter-opt:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.mc-filter-opt.active { color: var(--green-600); font-weight: 600; }
+.mc-filter-opt svg { color: var(--green-600); flex-shrink: 0; }
+
+/* =================== MY CHECKLISTS — inline rename (pencil) =================== */
+.mc-title-pencil-btn { width: 26px; height: 26px; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mc-title-pencil-btn:hover { background: var(--bg-input); color: var(--green-600); }
+.mc-title-input { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--green-400); border-radius: var(--radius-sm); padding: 5px 10px; width: 100%; max-width: 380px; }
+.mc-title-input:focus { box-shadow: 0 0 0 3px var(--green-50); }
+
+/* =================== CHECKLIST HISTORY — completion bar =================== */
+.hist-bar-cell { display: flex; align-items: center; gap: 10px; min-width: 160px; }
+.hist-bar-track { flex: 1; height: 6px; border-radius: var(--radius-full); background: var(--bg-input); overflow: hidden; }
+.hist-bar-fill { height: 100%; border-radius: var(--radius-full); }
+.hist-bar-fill.good { background: var(--green-500); }
+.hist-bar-fill.bad { background: var(--red-400); }

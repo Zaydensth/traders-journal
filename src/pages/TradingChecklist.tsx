@@ -11,6 +11,7 @@ import { storage } from '../utils/storage';
 import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function fmtDate(d: string): string {
   return new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -52,6 +53,7 @@ export default function TradingChecklist() {
   const [showBell, setShowBell] = useState(false);
   const [bellRead, setBellRead] = useState(false);
   const [rowMenu, setRowMenu] = useState<string | null>(null);
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -113,6 +115,13 @@ export default function TradingChecklist() {
     setAnswers({});
     setNotes({});
     persist({}, {}, id);
+    const d = new Date();
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setChecklists(prev => {
+      const next = prev.map(c => c.id === id ? { ...c, lastUsed: ds } : c);
+      storage.saveChecklists(next);
+      return next;
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -160,10 +169,17 @@ export default function TradingChecklist() {
   }
 
   function deleteChecklist(id: string) {
-    if (!window.confirm('Delete this checklist? This cannot be undone.')) return;
+    setRowMenu(null);
+    setConfirmDel(id);
+  }
+
+  function confirmDelete() {
+    const id = confirmDel;
+    if (!id) return;
     const updated = checklists.filter(c => c.id !== id);
     setChecklists(updated);
     storage.saveChecklists(updated);
+    setConfirmDel(null);
   }
 
   function printView() {
@@ -458,7 +474,7 @@ export default function TradingChecklist() {
                 </div>
               )}
               <div className="tc-viewall center">
-                <button className="view-all-link" onClick={() => navigate('/trading-checklist/manage')}>
+                <button className="view-all-link" onClick={() => navigate('/trading-checklist/history')}>
                   View All History <ChevronRight size={14} />
                 </button>
               </div>
@@ -514,6 +530,17 @@ export default function TradingChecklist() {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        danger
+        title="Delete checklist?"
+        message="This checklist and all of its checkpoints will be permanently removed. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
     </>
   );
 }

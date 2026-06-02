@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sun, Moon, Bell, ChevronDown, Plus, Search, Filter, Pencil, Trash2,
+  ArrowLeft, Sun, Moon, Bell, ChevronDown, Plus, Search, Filter, Check, Pencil, Trash2,
   Edit3, GripVertical, Share2, MoreHorizontal, ClipboardList, Copy,
   LayoutDashboard, Settings, FileText
 } from 'lucide-react';
@@ -11,6 +11,7 @@ import { storage } from '../utils/storage';
 import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const SETUP_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -41,9 +42,14 @@ export default function MyChecklists() {
   const [checklists, setChecklists] = useState<ChecklistTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
   const [search, setSearch] = useState('');
+  const [filterCat, setFilterCat] = useState('All');
+  const [showFilter, setShowFilter] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
   const [rowMenu, setRowMenu] = useState<string | null>(null);
   const [headMenu, setHeadMenu] = useState(false);
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const [showProfile, setShowProfile] = useState(false);
@@ -52,6 +58,7 @@ export default function MyChecklists() {
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ sectionId: string; itemId: string } | null>(null);
 
   const notifTrades = useMemo(() => storage.getTrades().slice(0, 5), []);
@@ -70,10 +77,14 @@ export default function MyChecklists() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reset transient editor state when the selected checklist changes.
+  useEffect(() => { setEditingName(false); setHeadMenu(false); setEditingItemId(null); }, [selectedId]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) setShowFilter(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -81,12 +92,20 @@ export default function MyChecklists() {
 
   const selected = useMemo(() => checklists.find(c => c.id === selectedId) || null, [checklists, selectedId]);
   const filtered = useMemo(
-    () => checklists.filter(c => c.name.toLowerCase().includes(search.toLowerCase())),
-    [checklists, search]
+    () => checklists.filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) &&
+      (filterCat === 'All' || c.category === filterCat)
+    ),
+    [checklists, search, filterCat]
   );
 
   function persist(list: ChecklistTemplate[]) {
     storage.saveChecklists(list);
+  }
+
+  function showToast(msg: string) {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 2500);
   }
 
   function createNew(base?: ChecklistTemplate[]) {
@@ -119,13 +138,21 @@ export default function MyChecklists() {
   }
 
   function deleteChecklist(id: string) {
-    if (!window.confirm('Delete this checklist? This cannot be undone.')) return;
+    setRowMenu(null);
+    setHeadMenu(false);
+    setConfirmDel(id);
+  }
+
+  function confirmDelete() {
+    const id = confirmDel;
+    if (!id) return;
     setChecklists(prev => {
       const next = prev.filter(c => c.id !== id);
       persist(next);
       if (id === selectedId) setSelectedId(next.find(c => c.id !== 'default-pretrade')?.id || next[0]?.id || '');
       return next;
     });
+    setConfirmDel(null);
   }
 
   function duplicate(id: string) {
@@ -143,6 +170,15 @@ export default function MyChecklists() {
     setChecklists(updated);
     persist(updated);
     setSelectedId(copy.id);
+    showToast('Checklist duplicated');
+  }
+
+  function shareChecklist() {
+    if (!selected) return;
+    const text = `${selected.name}\n\n` + selected.sections.map(s =>
+      `${s.title}\n` + s.items.map((it, i) => `  ${i + 1}. ${it.text}`).join('\n')).join('\n\n');
+    navigator.clipboard?.writeText(text);
+    showToast('Checklist copied to clipboard');
   }
 
   /* ─── item / section operations ─── */
@@ -218,6 +254,9 @@ export default function MyChecklists() {
       {/* ===== PAGE HEADER ===== */}
       <div className="page-header">
         <div className="page-header-left">
+          <button className="page-back-btn" onClick={() => navigate('/trading-checklist')}>
+            <ArrowLeft size={15} /> Back to Checklist
+          </button>
           <h2>My Checklists</h2>
           <p>Create, customize and manage your trading checklists.</p>
         </div>
@@ -293,12 +332,30 @@ export default function MyChecklists() {
               <div className="input-with-icon" style={{ flex: 1 }}>
                 <Search size={14} className="input-icon" />
                 <input type="text" placeholder="Search checklists..." value={search}
-                  onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 32 }} />
+                  onChange={e => setSearch(e.target.value)} />
               </div>
-              <button className="mc-filter-btn" title="Filter"><Filter size={15} /></button>
+              <div className="mc-filter-wrap" ref={filterRef}>
+                <button className={`mc-filter-btn ${filterCat !== 'All' ? 'active' : ''}`} title="Filter by category"
+                  onClick={() => setShowFilter(v => !v)}>
+                  <Filter size={15} />
+                </button>
+                {showFilter && (
+                  <div className="mc-filter-menu">
+                    {['All', ...CHECKLIST_CATEGORIES].map(cat => (
+                      <button key={cat} className={`mc-filter-opt ${filterCat === cat ? 'active' : ''}`}
+                        onClick={() => { setFilterCat(cat); setShowFilter(false); }}>
+                        {cat} {filterCat === cat && <Check size={13} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mc-list">
+              {filtered.length === 0 && (
+                <div className="tc-empty" style={{ padding: 20 }}>No checklists match your filter.</div>
+              )}
               {filtered.map(c => (
                 <div key={c.id} className={`mc-list-item ${selectedId === c.id ? 'active' : ''}`} onClick={() => setSelectedId(c.id)}>
                   <span className="mc-list-icon" style={{ color: c.color }}><ClipboardList size={18} /></span>
@@ -311,7 +368,7 @@ export default function MyChecklists() {
                     {rowMenu === c.id && (
                       <div className="ebs-popup-menu" onClick={e => e.stopPropagation()}>
                         <button className="ebs-popup-item" onClick={() => { setRowMenu(null); duplicate(c.id); }}><Copy size={14} /> Duplicate</button>
-                        <button className="ebs-popup-item danger" onClick={() => { setRowMenu(null); deleteChecklist(c.id); }}><Trash2 size={14} /> Delete</button>
+                        <button className="ebs-popup-item danger" onClick={() => deleteChecklist(c.id)}><Trash2 size={14} /> Delete</button>
                       </div>
                     )}
                   </div>
@@ -326,24 +383,29 @@ export default function MyChecklists() {
             <div className="mc-editor-col">
               <div className="card animate-in">
                 <div className="mc-editor-head">
-                  <div>
-                    <div className="mc-editor-title">
-                      {selected.name} <Pencil size={15} className="mc-title-pencil" />
-                    </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {editingName ? (
+                      <input className="mc-title-input" autoFocus value={selected.name}
+                        onChange={e => updateSelected(t => ({ ...t, name: e.target.value }))}
+                        onBlur={() => setEditingName(false)}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingName(false); }} />
+                    ) : (
+                      <div className="mc-editor-title">
+                        <span className="mc-editor-title-text">{selected.name}</span>
+                        <button className="mc-title-pencil-btn" title="Rename checklist" onClick={() => setEditingName(true)}>
+                          <Pencil size={15} />
+                        </button>
+                      </div>
+                    )}
                     <div className="mc-editor-points">{countPoints(selected)} Points</div>
                   </div>
                   <div className="mc-editor-actions">
-                    <button className="btn-outline-green mc-share-btn" onClick={() => {
-                      const text = `${selected.name}\n\n` + selected.sections.map(s =>
-                        `${s.title}\n` + s.items.map((it, i) => `  ${i + 1}. ${it.text}`).join('\n')).join('\n\n');
-                      navigator.clipboard?.writeText(text);
-                      alert('Checklist copied to clipboard — ready to share.');
-                    }}><Share2 size={14} /> Share</button>
+                    <button className="btn-outline-green mc-share-btn" onClick={shareChecklist}><Share2 size={14} /> Share</button>
                     <div style={{ position: 'relative' }}>
                       <button className="tc-row-btn" onClick={() => setHeadMenu(v => !v)}><MoreHorizontal size={16} /></button>
                       {headMenu && (
-                        <div className="ebs-popup-menu" onClick={() => setHeadMenu(false)}>
-                          <button className="ebs-popup-item" onClick={() => duplicate(selected.id)}><Copy size={14} /> Duplicate</button>
+                        <div className="ebs-popup-menu">
+                          <button className="ebs-popup-item" onClick={() => { setHeadMenu(false); duplicate(selected.id); }}><Copy size={14} /> Duplicate</button>
                           <button className="ebs-popup-item danger" onClick={() => deleteChecklist(selected.id)}><Trash2 size={14} /> Delete</button>
                         </div>
                       )}
@@ -374,9 +436,9 @@ export default function MyChecklists() {
                               <input className="mc-item-edit" autoFocus value={item.text}
                                 onChange={e => updateItem(section.id, item.id, { text: e.target.value })}
                                 onBlur={() => setEditingItemId(null)}
-                                onKeyDown={e => { if (e.key === 'Enter') setEditingItemId(null); }} />
+                                onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingItemId(null); }} />
                             ) : (
-                              <span className="mc-item-text">{item.text}</span>
+                              <span className="mc-item-text" onDoubleClick={() => setEditingItemId(item.id)}>{item.text}</span>
                             )}
                             <div className="select-wrapper mc-req-select">
                               <select value={item.required ? 'Required' : 'Optional'}
@@ -445,6 +507,19 @@ export default function MyChecklists() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        danger
+        title="Delete checklist?"
+        message="This checklist and all of its checkpoints will be permanently removed. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
+
+      {toast && <div className="app-toast">{toast}</div>}
     </>
   );
 }
