@@ -1,4 +1,6 @@
 import type { Trade, CustomSetup } from '../types/trade';
+import type { ChecklistTemplate, ChecklistRun, CurrentRun } from '../types/checklist';
+import { getDefaultChecklists, getDefaultRuns, getDefaultCurrentRun } from '../types/checklist';
 
 const BASE_KEY = 'traders_journal_data';
 let _uid: string | null = null;
@@ -68,5 +70,54 @@ export const storage = {
   saveCustomSetups: (setups: CustomSetup[]): void => {
     const key = _uid ? `tj_setups_${_uid}` : 'tj_setups_none';
     localStorage.setItem(key, JSON.stringify(setups));
+  },
+
+  /* ─── Trading Checklists ─── */
+  getChecklists: (): ChecklistTemplate[] => {
+    const key = _uid ? `tj_checklists_${_uid}` : 'tj_checklists_none';
+    const data = localStorage.getItem(key);
+    if (data === null) {
+      const seed = getDefaultChecklists();
+      localStorage.setItem(key, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(data);
+  },
+
+  saveChecklists: (list: ChecklistTemplate[]): void => {
+    const key = _uid ? `tj_checklists_${_uid}` : 'tj_checklists_none';
+    localStorage.setItem(key, JSON.stringify(list));
+  },
+
+  getChecklistRuns: (): ChecklistRun[] => {
+    const key = _uid ? `tj_checklist_runs_${_uid}` : 'tj_checklist_runs_none';
+    const data = localStorage.getItem(key);
+    if (data === null) {
+      const seed = getDefaultRuns();
+      localStorage.setItem(key, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(data);
+  },
+
+  saveChecklistRuns: (list: ChecklistRun[]): void => {
+    const key = _uid ? `tj_checklist_runs_${_uid}` : 'tj_checklist_runs_none';
+    localStorage.setItem(key, JSON.stringify(list));
+  },
+
+  getCurrentRun: (): CurrentRun => {
+    const key = _uid ? `tj_checklist_current_${_uid}` : 'tj_checklist_current_none';
+    const data = localStorage.getItem(key);
+    if (data === null) {
+      const seed = getDefaultCurrentRun();
+      localStorage.setItem(key, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(data);
+  },
+
+  saveCurrentRun: (cr: CurrentRun): void => {
+    const key = _uid ? `tj_checklist_current_${_uid}` : 'tj_checklist_current_none';
+    localStorage.setItem(key, JSON.stringify(cr));
   },
 };

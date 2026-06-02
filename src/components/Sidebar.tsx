@@ -1,9 +1,10 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useEffect, useState, useMemo } from 'react';
 import {
   LayoutDashboard, PlusCircle, FileText, BarChart2,
   AlertTriangle, BookOpen, Settings, TrendingUp, Lightbulb,
-  RefreshCw, ClipboardList, Layers, Star, Menu, X
+  RefreshCw, ClipboardList, Layers, Star, Menu, X,
+  ClipboardCheck, Plus
 } from 'lucide-react';
 import { FaSackDollar } from 'react-icons/fa6';
 import { storage } from '../utils/storage';
@@ -109,6 +110,10 @@ export default function Sidebar() {
             <span className="sidebar-icon"><BookOpen size={18} /></span>
             Daily Review
           </NavLink>
+          <NavLink to="/trading-checklist" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <span className="sidebar-icon"><ClipboardCheck size={18} /></span>
+            Trading Checklist
+          </NavLink>
           <NavLink to="/settings" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-icon"><Settings size={18} /></span>
             Settings
@@ -171,6 +176,15 @@ export default function Sidebar() {
                 </div>
               </div>
             )}
+          </div>
+        ) : location.pathname.startsWith('/trading-checklist') ? (
+          <div className="sidebar-create-checklist">
+            <div className="scc-icon"><ClipboardCheck size={22} /></div>
+            <strong>Create Your Own Checklist</strong>
+            <p>Build a personalized checklist that matches your strategy and trading style.</p>
+            <Link to="/trading-checklist/manage" state={{ create: true }} className="scc-btn">
+              <Plus size={15} /> Create New Checklist
+            </Link>
           </div>
         ) : (
           <div className="sidebar-discipline">
