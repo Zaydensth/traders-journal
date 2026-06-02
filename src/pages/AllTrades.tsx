@@ -167,7 +167,7 @@ export default function AllTrades() {
   const paginated = useMemo(() => sorted.slice((page - 1) * pageSize, page * pageSize), [sorted, page, pageSize]);
 
   const filteredStats = useMemo(() => {
-    const wins = filtered.filter(t => calcPnL(t) >= 0).length;
+    const wins = filtered.filter(t => calcPnL(t) > 0).length;
     const pnl  = filtered.reduce((s, t) => s + calcPnL(t), 0);
     return { wins, total: filtered.length, winRate: filtered.length ? (wins / filtered.length) * 100 : 0, pnl };
   }, [filtered]);

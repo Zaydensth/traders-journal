@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sun, Moon, Bell, ChevronDown, ChevronRight, Plus, Play, Edit3, MoreHorizontal,
-  ClipboardCheck, ClipboardList, RotateCcw, Lightbulb, Download, Printer, Copy,
+  ClipboardCheck, ClipboardList, RotateCcw, Save, Lightbulb, Download, Printer, Copy,
   BarChart3, LayoutDashboard, Settings, Trash2, FileText
 } from 'lucide-react';
 import type { ChecklistTemplate, ChecklistRun, CheckResult } from '../types/checklist';
@@ -12,6 +12,7 @@ import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../utils/useToast';
 
 function fmtDate(d: string): string {
   return new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -54,6 +55,7 @@ export default function TradingChecklist() {
   const [bellRead, setBellRead] = useState(false);
   const [rowMenu, setRowMenu] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -108,6 +110,24 @@ export default function TradingChecklist() {
     setAnswers({});
     setNotes({});
     persist({}, {});
+  }
+
+  // Record the current checklist completion into history (Recent Checklists / All-Time / History page).
+  function saveToHistory() {
+    if (!active) return;
+    const d = new Date();
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const run: ChecklistRun = {
+      id: storage.generateId(),
+      checklistId: active.id,
+      checklistName: active.id === 'default-pretrade' ? 'Pre-Trade Checklist' : active.name,
+      date: ds,
+      yes: summary.yes, no: summary.no, na: summary.na, total: summary.total, percent: summary.percent,
+    };
+    const updated = [run, ...runs];
+    setRuns(updated);
+    storage.saveChecklistRuns(updated);
+    showToast(`Saved to history — ${summary.percent}% completed`);
   }
 
   function runChecklist(id: string) {
@@ -290,9 +310,14 @@ export default function TradingChecklist() {
                     <p>{active.description}</p>
                   </div>
                 </div>
-                <button className="btn-outline-green tc-reset-btn" onClick={resetChecklist}>
-                  <RotateCcw size={14} /> Reset Checklist
-                </button>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem' }} onClick={saveToHistory}>
+                    <Save size={14} /> Save to History
+                  </button>
+                  <button className="btn-outline-green tc-reset-btn" onClick={resetChecklist}>
+                    <RotateCcw size={14} /> Reset Checklist
+                  </button>
+                </div>
               </div>
 
               <div className="card-body-np">
@@ -541,6 +566,7 @@ export default function TradingChecklist() {
         onConfirm={confirmDelete}
         onCancel={() => setConfirmDel(null)}
       />
+      {toast && <div className="app-toast">{toast}</div>}
     </>
   );
 }

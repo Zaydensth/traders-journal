@@ -34,7 +34,7 @@ export default function Sidebar() {
       const d = new Date(t.date);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const wins = monthly.filter(t => calcPnL(t) >= 0).length;
+    const wins = monthly.filter(t => calcPnL(t) > 0).length;
     const pnl = monthly.reduce((s, t) => s + calcPnL(t), 0);
     const rrs = monthly.map(t => calcRiskReward(t)).filter(r => r > 0);
     const avgRR = rrs.length ? rrs.reduce((s, r) => s + r, 0) / rrs.length : 0;

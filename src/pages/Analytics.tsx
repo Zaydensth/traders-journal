@@ -8,7 +8,7 @@ import {
 import type { Trade } from '../types/trade';
 import { storage } from '../utils/storage';
 import {
-  calcPnL, calcRiskReward, formatCurrency, getDisciplineScore
+  calcPnL, calcRiskReward, formatCurrency, getDisciplineBreakdown
 } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
@@ -57,53 +57,23 @@ export default function Analytics() {
     });
   }, [trades, timePeriod]);
 
-  // Discipline Score — 6-Component Scoring Engine
-  const disciplineScore = useMemo(() => getDisciplineScore(filteredTrades), [filteredTrades]);
+  // Discipline Score — uses the SAME engine as the sidebar so the circle and the bars agree
+  const breakdown = useMemo(() => getDisciplineBreakdown(filteredTrades), [filteredTrades]);
+  const disciplineScore = breakdown.overall;
 
-  // Component breakdown
+  // Component breakdown — derived from the canonical engine (bars now sum to the overall score)
   const scoreBreakdown = useMemo(() => {
-    const t = filteredTrades;
-    if (t.length === 0) return null;
-
-    // Trade Plan Adherence (30 pts) - trades with stop loss AND take profit AND setup defined
-    const planAdherent = t.filter(tr => tr.stopLoss > 0 && tr.exitPrice > 0 && tr.setup).length;
-    const planScore = Math.round((planAdherent / t.length) * 30);
-
-    // Patience & Timing (20 pts) - trades held for reasonable time, not impulsive
-    const withNotes = t.filter(tr => tr.notes && tr.notes.length > 10).length;
-    const patienceScore = Math.round((withNotes / t.length) * 20);
-
-    // Risk Management (20 pts) - proper stop loss usage
-    const withSL = t.filter(tr => tr.stopLoss > 0).length;
-    const riskScore = Math.round((withSL / t.length) * 20);
-
-    // Emotional Control (15 pts) - trades with emotion logged and not "Fear" or "Greed" heavy
-    const neutral = t.filter(tr => tr.emotion === 'Neutral' || tr.emotion === 'Confidence').length;
-    const emotionScore = Math.round((neutral / t.length) * 15);
-
-    // Journaling & Review (10 pts) - trades with notes
-    const journaled = t.filter(tr => tr.notes && tr.notes.trim().length > 0).length;
-    const journalScore = Math.round((journaled / t.length) * 10);
-
-    // Consistency Bonus (5 pts) - consistent trading days
-    const tradeDays = new Set(t.map(tr => tr.date.split('T')[0])).size;
-    const consistencyScore = Math.min(5, Math.round(tradeDays / 4));
-
-    return [
-      { label: 'Trade Plan Adherence', score: planScore, max: 30, icon: <Target size={16} />, color: '#10b981' },
-      { label: 'Patience & Timing', score: patienceScore, max: 20, icon: <Clock size={16} />, color: '#3b82f6' },
-      { label: 'Risk Management', score: riskScore, max: 20, icon: <AlertTriangle size={16} />, color: '#f59e0b' },
-      { label: 'Emotional Control', score: emotionScore, max: 15, icon: <TrendingDown size={16} />, color: '#8b5cf6' },
-      { label: 'Journaling & Review', score: journalScore, max: 10, icon: <BookOpen size={16} />, color: '#06b6d4' },
-      { label: 'Consistency Bonus', score: consistencyScore, max: 5, icon: <CheckCircle2 size={16} />, color: '#ec4899' },
-    ];
-  }, [filteredTrades]);
+    if (filteredTrades.length === 0) return null;
+    const icons = [<Target size={16} />, <Clock size={16} />, <AlertTriangle size={16} />, <TrendingDown size={16} />, <BookOpen size={16} />, <CheckCircle2 size={16} />];
+    const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
+    return breakdown.components.map((c, i) => ({ label: c.name, score: c.score, max: c.maxScore, icon: icons[i], color: colors[i] }));
+  }, [breakdown, filteredTrades]);
 
   // Quick stats
   const stats = useMemo(() => {
     const t = filteredTrades;
     if (t.length === 0) return null;
-    const wins = t.filter(tr => calcPnL(tr) >= 0).length;
+    const wins = t.filter(tr => calcPnL(tr) > 0).length;
     const totalPnl = t.reduce((s, tr) => s + calcPnL(tr), 0);
     const rrs = t.map(tr => calcRiskReward(tr)).filter(r => r > 0);
     const avgRR = rrs.length ? rrs.reduce((s, r) => s + r, 0) / rrs.length : 0;

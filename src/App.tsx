@@ -19,13 +19,11 @@ import './index.css';
 function ProtectedApp() {
   const { user, loading } = useAuth();
 
-  useEffect(() => { applyTheme(getTheme()); }, []);
+  // Keep the storage user in sync synchronously (before child effects read storage) so data is
+  // never keyed under "_none" on the first authenticated render, and is cleared on logout.
+  storage.setUser(user ? user.uid : null);
 
-  useEffect(() => {
-    if (user) {
-      storage.setUser(user.uid);
-    }
-  }, [user]);
+  useEffect(() => { applyTheme(getTheme()); }, []);
 
   if (loading) {
     return (

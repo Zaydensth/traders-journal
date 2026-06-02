@@ -12,6 +12,7 @@ import { calcPnL, formatCurrency, pnlColorClass } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../utils/useToast';
 
 const SETUP_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -49,7 +50,7 @@ export default function MyChecklists() {
   const [rowMenu, setRowMenu] = useState<string | null>(null);
   const [headMenu, setHeadMenu] = useState(false);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
   const [showProfile, setShowProfile] = useState(false);
@@ -101,11 +102,6 @@ export default function MyChecklists() {
 
   function persist(list: ChecklistTemplate[]) {
     storage.saveChecklists(list);
-  }
-
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2500);
   }
 
   function createNew(base?: ChecklistTemplate[]) {

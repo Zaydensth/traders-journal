@@ -88,9 +88,17 @@ export default function AddTrade() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Edit mode: load the existing trade into the form
+  // Edit mode: load the existing trade into the form; otherwise reset to a blank form
+  // (so navigating Edit → "Add New Trade" doesn't keep the previous trade's values).
   useEffect(() => {
-    if (!editId) return;
+    if (!editId) {
+      setForm({ ...defaultForm });
+      setTagsList([]);
+      setHasMistake(false);
+      setScreenshotName('');
+      setTagInput('');
+      return;
+    }
     const t = storage.getTrades().find(tr => tr.id === editId);
     if (!t) return;
     setForm({
@@ -461,6 +469,9 @@ export default function AddTrade() {
                     {storage.getCustomSetups().map(cs => (
                       <option key={cs.id} value={cs.name}>{cs.name}</option>
                     ))}
+                    {form.setup && !storage.getCustomSetups().some(cs => cs.name === form.setup) && (
+                      <option value={form.setup}>{form.setup}</option>
+                    )}
                   </select>
                   <ChevronDown size={14} className="select-icon" />
                 </div>
