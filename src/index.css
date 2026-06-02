@@ -4409,3 +4409,19 @@ button.view-all-link { background: transparent; }
 .hist-bar-fill { height: 100%; border-radius: var(--radius-full); }
 .hist-bar-fill.good { background: var(--green-500); }
 .hist-bar-fill.bad { background: var(--red-400); }
+
+/* =================== TRADE DETAIL MODAL (View) =================== */
+.td-detail-card { max-width: 480px; }
+.td-detail-card .modal-body { overflow-y: auto; }
+.td-detail-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+.td-metric { background: var(--bg-input); border-radius: var(--radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+.td-metric span { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+.td-metric strong { font-size: 1.05rem; font-weight: 700; }
+.td-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 18px; }
+.td-detail-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 0.82rem; }
+.td-detail-label { color: var(--text-muted); font-weight: 500; }
+.td-detail-val { color: var(--text-primary); font-weight: 600; text-align: right; }
+.td-detail-block { margin-top: 14px; display: flex; flex-direction: column; }
+.td-detail-block .td-detail-label { margin-bottom: 5px; }
+.td-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.td-detail-notes { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; background: var(--bg-input); border-radius: var(--radius-md); padding: 10px 12px; margin-top: 4px; }

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
-  TrendingUp, TrendingDown,
+  TrendingUp, TrendingDown, ArrowLeft,
   Calendar, Clock, Search, Hash,
   ChevronDown, X, CheckCircle2, Upload, Image,
   Bell, Sun, Moon, Zap, Settings, LayoutDashboard,
@@ -13,6 +13,7 @@ import { storage } from '../utils/storage';
 import { calcPnL, calcRiskReward, calcRMultiple, formatCurrency } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../utils/useToast';
 
 const EMOTION_OPTIONS = [
   { label: 'Neutral', emoji: '😐', color: '' },
@@ -53,6 +54,9 @@ const defaultForm: FormData = {
 
 export default function AddTrade() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editId = (location.state as { editId?: string } | null)?.editId || null;
+  const { toast, showToast } = useToast();
   const { user, logout } = useAuth();
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Trader';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -83,6 +87,24 @@ export default function AddTrade() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Edit mode: load the existing trade into the form
+  useEffect(() => {
+    if (!editId) return;
+    const t = storage.getTrades().find(tr => tr.id === editId);
+    if (!t) return;
+    setForm({
+      date: t.date, time: t.time, exitTime: t.exitTime || '', instrument: t.instrument,
+      assetType: t.assetType, setup: t.setup, timeframe: t.timeframe, direction: t.direction,
+      entryPrice: t.entryPrice, exitPrice: t.exitPrice, stopLoss: t.stopLoss, targetPrice: t.targetPrice,
+      quantity: t.quantity, fees: t.fees, notes: t.notes, emotion: t.emotion, mistake: t.mistake,
+      tags: '', screenshot: t.screenshot || '',
+    });
+    setTagsList(t.tags || []);
+    setHasMistake(!!t.mistake);
+    setScreenshotName(t.screenshot || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
 
   const previewTrade = useMemo((): Trade => ({
     ...form,
@@ -169,18 +191,22 @@ export default function AddTrade() {
     }
     const trade: Trade = {
       ...form,
-      id: `trade_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: editId || `trade_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       result: livePnL >= 0 ? 'Profit' : 'Loss',
       tags: tagsList,
     };
-    const trades = storage.getTrades();
-    trades.push(trade);
-    storage.saveTrades(trades);
+    if (editId) {
+      storage.updateTrade(editId, trade);
+    } else {
+      const trades = storage.getTrades();
+      trades.push(trade);
+      storage.saveTrades(trades);
+    }
     if (!isDraft) {
       setShowSuccess(true);
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate(editId ? '/all-trades' : '/'), 1500);
     } else {
-      alert('Trade saved as draft!');
+      showToast('Trade saved as draft');
     }
   }
 
@@ -212,7 +238,7 @@ export default function AddTrade() {
       <div className="success-overlay">
         <div className="success-card">
           <div className="success-icon"><CheckCircle2 size={48} color="var(--green-600)" /></div>
-          <h2>Trade Saved!</h2>
+          <h2>{editId ? 'Trade Updated!' : 'Trade Saved!'}</h2>
           <p>{livePnL >= 0 ? '🎉 Profitable trade logged.' : '📉 Loss recorded — learn and improve!'}</p>
           <div className="success-stats">
             <div className={`success-stat ${livePnL >= 0 ? 'positive' : 'negative'}`}>
@@ -222,7 +248,7 @@ export default function AddTrade() {
               <span>R:R</span><strong>1 : {liveRR.toFixed(2)}</strong>
             </div>
           </div>
-          <p className="success-redirect">Redirecting to Dashboard...</p>
+          <p className="success-redirect">Redirecting to {editId ? 'All Trades' : 'Dashboard'}...</p>
         </div>
       </div>
     );
@@ -232,8 +258,13 @@ export default function AddTrade() {
     <>
       <div className="page-header">
         <div className="page-header-left">
-          <h2>Add New Trade</h2>
-          <p>Record every trade and improve with detailed journaling.</p>
+          {editId && (
+            <button type="button" className="page-back-btn" onClick={() => navigate('/all-trades')}>
+              <ArrowLeft size={15} /> Back to All Trades
+            </button>
+          )}
+          <h2>{editId ? 'Edit Trade' : 'Add New Trade'}</h2>
+          <p>{editId ? 'Update the details of this trade.' : 'Record every trade and improve with detailed journaling.'}</p>
         </div>
         <div className="page-header-right">
           <button className="header-btn" onClick={() => { const next = toggleTheme(); setIsDark(next === 'dark'); }}>
@@ -638,10 +669,10 @@ export default function AddTrade() {
 
           {/* Submit Buttons */}
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={handleReset}>Cancel</button>
+            <button type="button" className="btn-secondary" onClick={() => editId ? navigate('/all-trades') : handleReset()}>Cancel</button>
             <button type="button" className="btn-primary-outlined" onClick={() => saveTrade(true)}>Save as Draft</button>
             <button type="submit" className="btn-primary" disabled={submitted && !isFormValid}>
-              <CheckCircle2 size={16} /> Save Trade
+              <CheckCircle2 size={16} /> {editId ? 'Update Trade' : 'Save Trade'}
             </button>
           </div>
         </div>
@@ -782,6 +813,7 @@ export default function AddTrade() {
 
         </div>
       </form>
+      {toast && <div className="app-toast">{toast}</div>}
     </>
   );
 }

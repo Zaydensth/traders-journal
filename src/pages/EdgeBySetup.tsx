@@ -11,6 +11,7 @@ import type { Trade, CustomSetup } from '../types/trade';
 // types
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const SETUP_COLORS = [
   '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
@@ -46,6 +47,7 @@ export default function EdgeBySetup() {
   const [selectedSetup, setSelectedSetup] = useState<string | null>(null);
   const [timePeriod, setTimePeriod] = useState('This Month');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -253,11 +255,17 @@ export default function EdgeBySetup() {
   }
 
   function handleDeleteSetup(id: string) {
-    if (!window.confirm('Delete this setup?')) return;
+    setConfirmDel(id);
+  }
+
+  function confirmDeleteSetup() {
+    const id = confirmDel;
+    if (!id) return;
     const updated = customSetups.filter(s => s.id !== id);
     setCustomSetups(updated);
     storage.saveCustomSetups(updated);
     if (selectedSetup) setSelectedSetup(null);
+    setConfirmDel(null);
   }
 
   const allTimeframes = ['1 Minute', '5 Minute', '15 Minute', '30 Minute', '1 Hour', '4 Hour', 'Daily'];
@@ -616,6 +624,17 @@ export default function EdgeBySetup() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        danger
+        title="Delete setup?"
+        message="This setup will be permanently removed. Trades already logged with it are not affected. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDeleteSetup}
+        onCancel={() => setConfirmDel(null)}
+      />
     </>
   );
 }

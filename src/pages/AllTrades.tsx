@@ -19,6 +19,9 @@ import {
 } from '../utils/calculations';
 import { toggleTheme, getTheme } from '../utils/theme';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
+import TradeDetailModal from '../components/TradeDetailModal';
+import { useToast } from '../utils/useToast';
 
 /* ─── helpers ─── */
 const AVATAR_COLORS = ['#4f46e5','#059669','#dc2626','#ea580c','#7c3aed','#0891b2','#be185d','#1e293b','#0d9488','#6d28d9'];
@@ -73,6 +76,9 @@ export default function AllTrades() {
   const [bellRead, setBellRead] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
+  const [viewTrade, setViewTrade] = useState<Trade | null>(null);
+  const { toast, showToast } = useToast();
 
   const profileRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -190,12 +196,19 @@ export default function AllTrades() {
   }
 
   function handleDelete(id: string) {
-    if (!window.confirm('Delete this trade? This cannot be undone.')) return;
+    setConfirmDel(id);
+  }
+
+  function confirmDelete() {
+    const id = confirmDel;
+    if (!id) return;
     const updated = trades.filter(t => t.id !== id);
     storage.saveTrades(updated);
     setTrades(updated);
     setStats(getTradeStats(updated));
     setSelected(prev => { const s = new Set(prev); s.delete(id); return s; });
+    setConfirmDel(null);
+    showToast('Trade deleted');
   }
 
   function handleExport() {
@@ -469,9 +482,11 @@ export default function AllTrades() {
             <div className="stat-card-icon blue"><Calendar size={22} /></div>
             <div className="stat-card-label">Best Day</div>
             <div className="stat-card-value" style={{ fontSize: '0.95rem' }}>
-              {new Date(stats.bestDay.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {stats.bestDay.date && stats.bestDay.date !== '-'
+                ? new Date(stats.bestDay.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—'}
             </div>
-            <div className="stat-card-change up">{formatCurrency(stats.bestDay.pnl)}</div>
+            <div className="stat-card-change up">{stats.bestDay.date !== '-' ? formatCurrency(stats.bestDay.pnl) : 'No profitable day yet'}</div>
           </div>
           <div className="stat-card animate-in">
             <div className="stat-card-icon red"><Flame size={22} /></div>
@@ -597,8 +612,8 @@ export default function AllTrades() {
                         </td>
                         <td>
                           <div className="at-action-btns">
-                            <button className="at-action-btn" title="View"><Eye size={14} /></button>
-                            <button className="at-action-btn" title="Edit"><Edit3 size={14} /></button>
+                            <button className="at-action-btn" title="View" onClick={() => setViewTrade(trade)}><Eye size={14} /></button>
+                            <button className="at-action-btn" title="Edit" onClick={() => navigate('/add-trade', { state: { editId: trade.id } })}><Edit3 size={14} /></button>
                             <button className="at-action-btn danger" title="Delete" onClick={() => handleDelete(trade.id)}><Trash2 size={14} /></button>
                           </div>
                         </td>
@@ -660,8 +675,8 @@ export default function AllTrades() {
                       <div className="at-grid-card-footer">
                         <MiniChart positive={pnl >= 0} />
                         <div className="at-action-btns">
-                          <button className="at-action-btn" title="View"><Eye size={14} /></button>
-                          <button className="at-action-btn" title="Edit"><Edit3 size={14} /></button>
+                          <button className="at-action-btn" title="View" onClick={() => setViewTrade(trade)}><Eye size={14} /></button>
+                          <button className="at-action-btn" title="Edit" onClick={() => navigate('/add-trade', { state: { editId: trade.id } })}><Edit3 size={14} /></button>
                           <button className="at-action-btn danger" title="Delete" onClick={() => handleDelete(trade.id)}><Trash2 size={14} /></button>
                         </div>
                       </div>
@@ -689,6 +704,23 @@ export default function AllTrades() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDel}
+        danger
+        title="Delete trade?"
+        message="This trade will be permanently removed from your journal. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
+      <TradeDetailModal
+        trade={viewTrade}
+        onClose={() => setViewTrade(null)}
+        onEdit={(id) => { setViewTrade(null); navigate('/add-trade', { state: { editId: id } }); }}
+      />
+      {toast && <div className="app-toast">{toast}</div>}
     </>
   );
 }

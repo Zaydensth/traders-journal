@@ -7,6 +7,8 @@ import {
 import { toggleTheme, getTheme } from '../utils/theme';
 import { storage } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useToast } from '../utils/useToast';
 
 interface SettingsState {
   fullName: string;
@@ -44,6 +46,8 @@ export default function Settings() {
 
   const [savedSection, setSavedSection] = useState('');
   const [isDark, setIsDark] = useState(() => getTheme() === 'dark');
+  const { toast, showToast } = useToast();
+  const [confirm, setConfirm] = useState<{ title: string; message: string; confirmLabel: string; action: () => void } | null>(null);
 
   function updateField<K extends keyof SettingsState>(field: K, value: SettingsState[K]) {
     setSettings(prev => ({ ...prev, [field]: value }));
@@ -56,9 +60,12 @@ export default function Settings() {
   }
 
   function handleResetDiscipline() {
-    if (window.confirm('Are you sure you want to reset your Discipline Score to zero?')) {
-      alert('Discipline Score has been reset.');
-    }
+    setConfirm({
+      title: 'Reset Discipline Score?',
+      message: 'Your Discipline Score will be reset to zero. This cannot be undone.',
+      confirmLabel: 'Reset',
+      action: () => showToast('Discipline Score has been reset'),
+    });
   }
 
   function handleExport() {
@@ -335,7 +342,7 @@ export default function Settings() {
             <h3>Mistake Management</h3>
           </div>
           <div className="settings-row-2">
-            <div className="mistake-mgmt-card" onClick={() => alert('Mistake categories can be customized in a future update.')}>
+            <div className="mistake-mgmt-card" onClick={() => showToast('Mistake categories — coming in a future update')}>
               <strong>Manage Mistake Categories</strong>
               <span>Customize or add new trading mistakes</span>
             </div>
@@ -400,14 +407,14 @@ export default function Settings() {
                 <span>Download all your trades as JSON</span>
               </div>
             </div>
-            <div className="data-action-card" onClick={() => alert('Import feature coming soon!')}>
+            <div className="data-action-card" onClick={() => showToast('Import feature coming soon')}>
               <div className="data-action-icon blue"><Upload size={22} /></div>
               <div>
                 <strong>Import Trades</strong>
                 <span>Import trades from a JSON file</span>
               </div>
             </div>
-            <div className="data-action-card danger" onClick={() => { if(window.confirm('Delete ALL trade data? This cannot be undone.')) { storage.deleteAllTrades(); alert('All trade data has been deleted.'); window.location.reload(); }}}>
+            <div className="data-action-card danger" onClick={() => setConfirm({ title: 'Delete all data?', message: 'This permanently removes ALL your trades. This action cannot be undone.', confirmLabel: 'Delete All', action: () => { storage.deleteAllTrades(); window.location.reload(); } })}>
               <div className="data-action-icon red"><Trash2 size={22} /></div>
               <div>
                 <strong>Delete All Data</strong>
@@ -428,6 +435,18 @@ export default function Settings() {
           <p>© 2024 Trader's Journal. All rights reserved.</p>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        danger
+        title={confirm?.title || ''}
+        message={confirm?.message || ''}
+        confirmLabel={confirm?.confirmLabel || 'Confirm'}
+        cancelLabel="Cancel"
+        onConfirm={() => { confirm?.action(); setConfirm(null); }}
+        onCancel={() => setConfirm(null)}
+      />
+      {toast && <div className="app-toast">{toast}</div>}
     </>
   );
 }
